@@ -5,16 +5,28 @@ import MissionCard from "../components/dashboard/MissionCard";
 import StatCard from "../components/ui/StatCard";
 import ProgressCard from "../components/ui/ProgressCard";
 
+import useAppStore from "../store/useAppStore";
+import { motion } from "framer-motion";
+
 export default function Dashboard() {
+  const missions = useAppStore((state) => state.missions);
+
+  const currentUser = useAppStore((state) => state.currentUser);
+
   return (
     <MainLayout>
       {/* Header */}
-      <div className="flex items-center justify-between mb-12">
+      <motion.div
+        className="flex items-center justify-between mb-12"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div>
           <h1 className="text-white text-5xl font-bold">Mission Control</h1>
 
           <p className="text-zinc-400 mt-4 text-lg">
-            Welcome back, Luis Angel.
+            Welcome back, {currentUser.name}.
           </p>
         </div>
 
@@ -29,12 +41,22 @@ export default function Dashboard() {
         >
           <p className="text-zinc-400 text-sm">Current Level</p>
 
-          <h2 className="text-cyan-400 text-2xl font-bold mt-1">A1 Beginner</h2>
+          <h2 className="text-cyan-400 text-2xl font-bold mt-1">
+            {currentUser.level} Beginner
+          </h2>
         </div>
-      </div>
+      </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{
+          delay: 0.2,
+          duration: 0.5,
+        }}
+      >
         <StatCard
           title="Completed Missions"
           value="05"
@@ -48,86 +70,33 @@ export default function Dashboard() {
         />
 
         <StatCard title="Current Streak" value="7 Days" subtitle="Keep going" />
+      </motion.div>
+
+      {/* Progress */}
+      <div className="mb-12">
+        <ProgressCard />
       </div>
 
-      {/* Progress + Activity */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-12">
-        {/* Progress */}
-        <div className="xl:col-span-2">
-          <ProgressCard />
-        </div>
-
-        {/* Activity */}
-        <div
-          className="
-            bg-zinc-900/70
-            backdrop-blur-xl
-            border border-zinc-800
-            rounded-3xl
-            p-8
-          "
-        >
-          <h2 className="text-white text-2xl font-bold mb-6">
-            Recent Activity
-          </h2>
-
-          <div className="space-y-5">
-            <div className="border-l-2 border-cyan-500 pl-4">
-              <p className="text-white">Completed “Introduce Yourself”</p>
-
-              <p className="text-zinc-500 text-sm mt-1">2 hours ago</p>
-            </div>
-
-            <div className="border-l-2 border-emerald-500 pl-4">
-              <p className="text-white">Achieved 90% in Grammar Quiz</p>
-
-              <p className="text-zinc-500 text-sm mt-1">Yesterday</p>
-            </div>
-
-            <div className="border-l-2 border-violet-500 pl-4">
-              <p className="text-white">New vocabulary unlocked</p>
-
-              <p className="text-zinc-500 text-sm mt-1">2 days ago</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mission Section */}
+      {/* Missions */}
       <div>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-white text-3xl font-bold">Active Missions</h2>
+        <div className="mb-8">
+          <h2 className="text-white text-3xl font-bold">Active Missions</h2>
 
-            <p className="text-zinc-400 mt-2">Continue your English journey.</p>
-          </div>
+          <p className="text-zinc-400 mt-2">Continue your English journey.</p>
         </div>
 
-        {/* Mission Grid */}
+        {/* Dynamic Mission Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          <MissionCard
-            title="Introduce Yourself"
-            description="Learn how to say your name, profession and nationality in English."
-            level="A1"
-            duration="10 min"
-            status="active"
-          />
-
-          <MissionCard
-            title="At The Coffee Shop"
-            description="Practice ordering drinks and asking for prices."
-            level="A1"
-            duration="15 min"
-            status="locked"
-          />
-
-          <MissionCard
-            title="Daily Routine"
-            description="Describe your daily activities using present simple."
-            level="A1"
-            duration="20 min"
-            status="completed"
-          />
+          {missions.map((mission) => (
+            <MissionCard
+              key={mission.id}
+              title={mission.title}
+              description={mission.description}
+              level={mission.level}
+              duration={mission.duration}
+              status={mission.status}
+            />
+          ))}
         </div>
       </div>
     </MainLayout>

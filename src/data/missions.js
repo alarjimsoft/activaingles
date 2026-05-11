@@ -22,7 +22,7 @@ export const missions = [
 
     vocabulary: ["name", "teacher", "engineer", "student", "country"],
 
-    progress: 25,
+    progress: 30,
   },
 
   {
@@ -71,5 +71,29 @@ export const missions = [
     vocabulary: ["wake up", "breakfast", "work", "study", "sleep"],
 
     progress: 100,
+  },
+  {
+    id: 4,
+    title: "Preguntar la edad",
+    description: "Aprender a pregutarle la edad a alguién.",
+
+    level: "A1",
+    duration: "10 min",
+    status: "active",
+
+    objectives: [
+      "Decir tu edad",
+      "Preguntar la edad a alguien",
+      "Ask someone’s name",
+    ],
+
+    grammar: {
+      title: "Verb To Be",
+      example: "How old are you?I",
+    },
+
+    vocabulary: ["old", "how", "are", "you", "do"],
+
+    progress: 35,
   },
 ];

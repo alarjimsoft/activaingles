@@ -1,6 +1,6 @@
 import { Target, BookOpen, Languages, Trophy } from "lucide-react";
 
-export default function MissionSidebar() {
+export default function MissionSidebar({ mission }) {
   return (
     <div
       className="
@@ -23,9 +23,9 @@ export default function MissionSidebar() {
         </div>
 
         <ul className="space-y-3 text-zinc-400 text-sm">
-          <li>• Introduce yourself in English</li>
-          <li>• Say your profession</li>
-          <li>• Ask someone’s name</li>
+          {mission.objectives.map((objective) => (
+            <li key={objective}>• {objective}</li>
+          ))}
         </ul>
       </div>
 
@@ -45,10 +45,12 @@ export default function MissionSidebar() {
           "
         >
           <p className="text-zinc-300 text-sm">
-            Verb <span className="text-cyan-400">to be</span>
+            <span className="text-cyan-400">{mission.grammar.title}</span>
           </p>
 
-          <p className="text-zinc-500 text-xs mt-2">I am / You are</p>
+          <p className="text-zinc-500 text-xs mt-2">
+            {mission.grammar.example}
+          </p>
         </div>
       </div>
 
@@ -61,7 +63,8 @@ export default function MissionSidebar() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {["name", "student", "teacher", "engineer", "country"].map((word) => (
+          {/*{["name", "student", "teacher", "engineer", "country"].map((word) => (*/}
+          {mission.vocabulary.map((word) => (
             <span
               key={word}
               className="
@@ -87,10 +90,15 @@ export default function MissionSidebar() {
         </div>
 
         <div className="w-full h-3 bg-zinc-800 rounded-full">
-          <div className="w-1/4 h-full bg-cyan-500 rounded-full"></div>
+          <div
+            className="h-full bg-cyan-500 rounded-full"
+            style={{ width: `${mission.progress}%` }}
+          ></div>
         </div>
 
-        <p className="text-zinc-500 text-xs mt-3">25% completed</p>
+        <p className="text-zinc-500 text-xs mt-3">
+          {mission.progress}% completed
+        </p>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const menuItems = [
   {
@@ -35,7 +36,12 @@ export default function Sidebar() {
   return (
     <aside className="w-72 min-h-screen bg-zinc-950 border-r border-zinc-800 flex flex-col px-6 py-8">
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-12">
+      <motion.div
+        className="flex items-center gap-3 mb-12"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="bg-cyan-500 p-3 rounded-2xl">
           <GraduationCap className="text-white" size={24} />
         </div>
@@ -45,7 +51,7 @@ export default function Sidebar() {
 
           <p className="text-zinc-400 text-sm">Mission Control</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Navigation */}
       <nav className="flex flex-col gap-3">
@@ -53,11 +59,12 @@ export default function Sidebar() {
           const Icon = item.icon;
 
           return (
-            <NavLink
-              key={item.title}
-              to={item.path}
-              className={({ isActive }) =>
-                `
+            <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.98 }}>
+              <NavLink
+                key={item.title}
+                to={item.path}
+                className={({ isActive }) =>
+                  `
                   flex items-center gap-4
                   px-4 py-4
                   rounded-2xl
@@ -69,15 +76,16 @@ export default function Sidebar() {
                       : "text-zinc-300 hover:bg-zinc-900 hover:text-cyan-400"
                   }
                 `
-              }
-            >
-              <Icon
-                size={22}
-                className="group-hover:scale-110 transition-transform"
-              />
+                }
+              >
+                <Icon
+                  size={22}
+                  className="group-hover:scale-110 transition-transform"
+                />
 
-              <span className="font-medium">{item.title}</span>
-            </NavLink>
+                <span className="font-medium">{item.title}</span>
+              </NavLink>
+            </motion.div>
           );
         })}
       </nav>

@@ -1,4 +1,5 @@
 import { Lock, CheckCircle2, PlayCircle, Clock3, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function MissionCard({
   title,
@@ -36,7 +37,16 @@ export default function MissionCard({
   const current = statusConfig[status];
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{
+        scale: 1.03,
+        y: -5,
+      }}
+      transition={{
+        duration: 0.4,
+      }}
       className={`
         relative
         bg-zinc-900/70
@@ -111,6 +121,6 @@ export default function MissionCard({
       >
         {current.button}
       </button>
-    </div>
+    </motion.div>
   );
 }
