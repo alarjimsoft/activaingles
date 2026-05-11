@@ -1,6 +1,82 @@
 import { Bot, Send, Mic } from "lucide-react";
 
-export default function TutorChat() {
+import { useEffect, useRef, useState } from "react";
+
+import { motion } from "framer-motion";
+
+import MessageBubble from "./MessageBubble";
+
+export default function TutorChat({ mission }) {
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      sender: "tutor",
+      text: `
+Hello 👋
+
+Today we will practice:
+
+${mission.title}
+
+Tell me something about yourself.
+      `,
+    },
+  ]);
+
+  const [input, setInput] = useState("");
+
+  const [isTyping, setIsTyping] = useState(false);
+
+  const messagesEndRef = useRef(null);
+
+  // Auto Scroll
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages, isTyping]);
+
+  // Fake AI Responses
+  const tutorReplies = [
+    "Excellent answer! 👍",
+    "Very good. Can you expand your sentence?",
+    "Nice work! Now try using another example.",
+    "Great pronunciation and grammar.",
+    "Good job! Let’s continue.",
+  ];
+
+  const sendMessage = () => {
+    if (!input.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      sender: "user",
+      text: input,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+
+    setInput("");
+
+    // Typing simulation
+    setIsTyping(true);
+
+    setTimeout(() => {
+      const randomReply =
+        tutorReplies[Math.floor(Math.random() * tutorReplies.length)];
+
+      const tutorMessage = {
+        id: Date.now() + 1,
+        sender: "tutor",
+        text: randomReply,
+      };
+
+      setMessages((prev) => [...prev, tutorMessage]);
+
+      setIsTyping(false);
+    }, 1500);
+  };
+
   return (
     <div
       className="
@@ -31,52 +107,45 @@ export default function TutorChat() {
         </div>
       </div>
 
-      {/* Chat Area */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* Tutor Message */}
-        <div className="flex justify-start">
-          <div
-            className="
-              max-w-xl
-              bg-zinc-800
-              rounded-3xl
-              rounded-tl-sm
-              p-5
-            "
-          >
-            <p className="text-zinc-200 leading-relaxed">
-              Hello Luis Angel 👋
-              <br />
-              <br />
-              Today we will practice how to introduce yourself in English.
-              <br />
-              <br />
-              Tell me:
-              <br />
-              What is your name and profession?
-            </p>
-          </div>
-        </div>
+        {messages.map((message) => (
+          <MessageBubble
+            key={message.id}
+            sender={message.sender}
+            text={message.text}
+          />
+        ))}
 
-        {/* User Message */}
-        <div className="flex justify-end">
-          <div
-            className="
-              max-w-xl
-              bg-cyan-500
-              rounded-3xl
-              rounded-tr-sm
-              p-5
-            "
+        {/* Typing Indicator */}
+        {isTyping && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-start"
           >
-            <p className="text-black leading-relaxed">
-              My name is Luis and I am a software developer.
-            </p>
-          </div>
-        </div>
+            <div
+              className="
+                bg-zinc-800
+                rounded-3xl
+                rounded-tl-sm
+                px-5 py-4
+                flex items-center gap-2
+              "
+            >
+              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"></div>
+
+              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce delay-100"></div>
+
+              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce delay-200"></div>
+            </div>
+          </motion.div>
+        )}
+
+        <div ref={messagesEndRef}></div>
       </div>
 
-      {/* Input Area */}
+      {/* Input */}
       <div
         className="
           border-t border-zinc-800
@@ -84,6 +153,7 @@ export default function TutorChat() {
         "
       >
         <div className="flex items-center gap-4">
+          {/* Mic Button */}
           <button
             className="
               bg-zinc-800
@@ -96,8 +166,16 @@ export default function TutorChat() {
             <Mic className="text-zinc-300" />
           </button>
 
+          {/* Input */}
           <input
             type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+              }
+            }}
             placeholder="Write your answer..."
             className="
               flex-1
@@ -111,7 +189,9 @@ export default function TutorChat() {
             "
           />
 
+          {/* Send */}
           <button
+            onClick={sendMessage}
             className="
               bg-cyan-500
               hover:bg-cyan-400
