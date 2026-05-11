@@ -6,8 +6,13 @@ import { motion } from "framer-motion";
 
 import MessageBubble from "./MessageBubble";
 
+import useAppStore from "../../store/useAppStore";
+
 export default function TutorChat({ mission }) {
-  const [messages, setMessages] = useState([
+  const messages = useAppStore((state) => state.getConversation(mission.id));
+
+  const addMessage = useAppStore((state) => state.addMessage);
+  /* const [messages, setMessages] = useState([
     {
       id: 1,
       sender: "tutor",
@@ -21,7 +26,7 @@ ${mission.title}
 Tell me something about yourself.
       `,
     },
-  ]);
+  ]); */
 
   const [input, setInput] = useState("");
 
@@ -54,7 +59,8 @@ Tell me something about yourself.
       text: input,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    //setMessages((prev) => [...prev, userMessage]);
+    addMessage(mission.id, userMessage);
 
     setInput("");
 
@@ -71,8 +77,8 @@ Tell me something about yourself.
         text: randomReply,
       };
 
-      setMessages((prev) => [...prev, tutorMessage]);
-
+      //setMessages((prev) => [...prev, tutorMessage]);
+      addMessage(mission.id, tutorMessage);
       setIsTyping(false);
     }, 1500);
   };
