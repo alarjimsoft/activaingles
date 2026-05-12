@@ -10,6 +10,7 @@ import useAppStore from "../../store/useAppStore";
 
 import { speechToText } from "../../services/speechService";
 import { speakText } from "../../services/ttsService";
+import { sendChatMessage } from "../../services/chatService";
 
 export default function TutorChat({ mission }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
@@ -100,15 +101,6 @@ Tell me something about yourself.
     }
   };
 
-  // Fake AI Responses
-  const tutorReplies = [
-    "Excellent answer! 👍",
-    "Very good. Can you expand your sentence?",
-    "Nice work! Now try using another example.",
-    "Great pronunciation and grammar.",
-    "Good job! Let’s continue.",
-  ];
-
   const playTutorVoice = async (text) => {
     try {
       const audioBlob = await speakText(text);
@@ -123,7 +115,7 @@ Tell me something about yourself.
     }
   };
 
-  const sendTranscriptMessage = (transcript) => {
+  const sendTranscriptMessage = async (transcript) => {
     if (!transcript.trim()) return;
 
     const userMessage = {
@@ -136,24 +128,26 @@ Tell me something about yourself.
 
     setIsTyping(true);
 
-    setTimeout(() => {
-      const randomReply =
-        tutorReplies[Math.floor(Math.random() * tutorReplies.length)];
+    try {
+      const result = await sendChatMessage(mission, transcript);
 
       const tutorMessage = {
         id: Date.now() + 1,
         sender: "tutor",
-        text: randomReply,
+        text: result.response,
       };
 
       addMessage(mission.id, tutorMessage);
-      playTutorVoice(tutorMessage.text);
 
+      playTutorVoice(tutorMessage.text);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = {
@@ -170,20 +164,23 @@ Tell me something about yourself.
     // Typing simulation
     setIsTyping(true);
 
-    setTimeout(() => {
-      const randomReply =
-        tutorReplies[Math.floor(Math.random() * tutorReplies.length)];
+    try {
+      const result = await sendChatMessage(mission, input);
 
       const tutorMessage = {
         id: Date.now() + 1,
         sender: "tutor",
-        text: randomReply,
+        text: result.response,
       };
 
-      //setMessages((prev) => [...prev, tutorMessage]);
       addMessage(mission.id, tutorMessage);
+
+      playTutorVoice(tutorMessage.text);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
