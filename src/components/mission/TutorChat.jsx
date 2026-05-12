@@ -8,6 +8,8 @@ import MessageBubble from "./MessageBubble";
 
 import useAppStore from "../../store/useAppStore";
 
+import { speechToText } from "../../services/speechService";
+
 export default function TutorChat({ mission }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
 
@@ -31,8 +33,11 @@ Tell me something about yourself.
   const [input, setInput] = useState("");
 
   const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   // Auto Scroll
   useEffect(() => {
@@ -40,6 +45,57 @@ Tell me something about yourself.
       behavior: "smooth",
     });
   }, [messages, isTyping]);
+
+  const startListening = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+      const mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorderRef.current = mediaRecorder;
+
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+
+        try {
+          const result = await speechToText(audioBlob);
+
+          setInput(result.transcript);
+        } catch (error) {
+          console.error(error);
+
+          alert("Speech recognition failed.");
+        }
+
+        setIsListening(false);
+      };
+
+      mediaRecorder.start();
+
+      setIsListening(true);
+
+      // Stop after 4 seconds
+      setTimeout(() => {
+        mediaRecorder.stop();
+      }, 4000);
+    } catch (error) {
+      console.error(error);
+
+      setIsListening(false);
+    }
+  };
 
   // Fake AI Responses
   const tutorReplies = [
@@ -161,15 +217,20 @@ Tell me something about yourself.
         <div className="flex items-center gap-4">
           {/* Mic Button */}
           <button
-            className="
-              bg-zinc-800
-              hover:bg-zinc-700
-              p-4
-              rounded-2xl
-              transition-all
-            "
+            onClick={startListening}
+            className={`
+                    p-4
+                    rounded-2xl
+                    transition-all
+
+                    ${
+                      isListening
+                        ? "bg-red-500 animate-pulse"
+                        : "bg-zinc-800 hover:bg-zinc-700"
+                    }
+                  `}
           >
-            <Mic className="text-zinc-300" />
+            <Mic className={isListening ? "text-white" : "text-zinc-300"} />
           </button>
 
           {/* Input */}
