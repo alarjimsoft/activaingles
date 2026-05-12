@@ -9,6 +9,7 @@ import MessageBubble from "./MessageBubble";
 import useAppStore from "../../store/useAppStore";
 
 import { speechToText } from "../../services/speechService";
+import { speakText } from "../../services/ttsService";
 
 export default function TutorChat({ mission }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
@@ -73,6 +74,8 @@ Tell me something about yourself.
           const result = await speechToText(audioBlob);
 
           setInput(result.transcript);
+          sendTranscriptMessage(result.transcript);
+          setInput("");
         } catch (error) {
           console.error(error);
 
@@ -105,6 +108,50 @@ Tell me something about yourself.
     "Great pronunciation and grammar.",
     "Good job! Let’s continue.",
   ];
+
+  const playTutorVoice = async (text) => {
+    try {
+      const audioBlob = await speakText(text);
+
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      const audio = new Audio(audioUrl);
+
+      audio.play();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const sendTranscriptMessage = (transcript) => {
+    if (!transcript.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      sender: "user",
+      text: transcript,
+    };
+
+    addMessage(mission.id, userMessage);
+
+    setIsTyping(true);
+
+    setTimeout(() => {
+      const randomReply =
+        tutorReplies[Math.floor(Math.random() * tutorReplies.length)];
+
+      const tutorMessage = {
+        id: Date.now() + 1,
+        sender: "tutor",
+        text: randomReply,
+      };
+
+      addMessage(mission.id, tutorMessage);
+      playTutorVoice(tutorMessage.text);
+
+      setIsTyping(false);
+    }, 1500);
+  };
 
   const sendMessage = () => {
     if (!input.trim()) return;
