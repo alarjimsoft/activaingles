@@ -18,6 +18,11 @@ import {
   getHistory,
 } from "../../services/conversationService";
 import useAuthStore from "../../store/authStore";
+import {
+  startProgress,
+  updateProgress,
+  completeMission,
+} from "../../services/progressService";
 
 export default function TutorChat({ mission }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
@@ -69,6 +74,12 @@ Tell me something about yourself.
         });
 
         setConversationId(result.conversationId);
+        // START PROGRESS
+        await startProgress({
+          idInscripcion: inscripcion.idInscripcion,
+
+          missionId: mission.id,
+        });
 
         console.log("Conversation created:", result.conversationId);
       } catch (error) {
@@ -216,6 +227,18 @@ Tell me something about yourself.
           messageText: tutorMessage.text,
         });
       }
+      // UPDATE PROGRESS
+      await updateProgress({
+        idInscripcion: inscripcion.idInscripcion,
+        missionId: mission.id,
+        progressPercent: 25,
+        totalXpEarned: 10,
+        totalMessages: messages.length + 1,
+        totalTimeMinutes: 5,
+        grammarScore: 85,
+        pronunciationScore: 80,
+      });
+
       console.log(tutorMessage);
       playTutorVoice(tutorMessage.text);
     } catch (error) {
@@ -267,7 +290,17 @@ Tell me something about yourself.
           messageText: tutorMessage.text,
         });
       }
-
+      // UPDATE PROGRESS
+      await updateProgress({
+        idInscripcion: inscripcion.idInscripcion,
+        missionId: mission.id,
+        progressPercent: 25,
+        totalXpEarned: 10,
+        totalMessages: messages.length + 1,
+        totalTimeMinutes: 5,
+        grammarScore: 85,
+        pronunciationScore: 80,
+      });
       playTutorVoice(tutorMessage.text);
     } catch (error) {
       console.error(error);
