@@ -5,13 +5,47 @@ import MissionCard from "../components/dashboard/MissionCard";
 import StatCard from "../components/ui/StatCard";
 import ProgressCard from "../components/ui/ProgressCard";
 
-import useAppStore from "../store/useAppStore";
 import { motion } from "framer-motion";
 
-export default function Dashboard() {
-  const missions = useAppStore((state) => state.missions);
+import { useEffect, useState } from "react";
 
-  const currentUser = useAppStore((state) => state.currentUser);
+import useAuthStore from "../store/authStore";
+
+import { getMissions } from "../services/missionService";
+
+export default function Dashboard() {
+  const student = useAuthStore((state) => state.student);
+
+  const inscripcion = useAuthStore((state) => state.inscripcion);
+
+  const [missions, setMissions] = useState([]);
+
+  useEffect(() => {
+    async function loadMissions() {
+      try {
+        if (!inscripcion) return;
+
+        const data = await getMissions(inscripcion.idCurso);
+
+        setMissions(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadMissions();
+  }, [inscripcion]);
+
+  // ✅ VALIDACIONES DESPUÉS
+  // DE TODOS LOS HOOKS
+
+  if (!student) {
+    return <div className="text-white p-10">No authenticated student</div>;
+  }
+
+  if (!inscripcion) {
+    return <div className="text-white p-10">No enrollment</div>;
+  }
 
   return (
     <MainLayout>
@@ -26,7 +60,7 @@ export default function Dashboard() {
           <h1 className="text-white text-5xl font-bold">Mission Control</h1>
 
           <p className="text-zinc-400 mt-4 text-lg">
-            Welcome back, {currentUser.name}.
+            Welcome back, {student.nombre}.
           </p>
         </div>
 
@@ -42,7 +76,7 @@ export default function Dashboard() {
           <p className="text-zinc-400 text-sm">Current Level</p>
 
           <h2 className="text-cyan-400 text-2xl font-bold mt-1">
-            {currentUser.level} Beginner
+            {student.nivel} Beginner
           </h2>
         </div>
       </motion.div>
@@ -89,11 +123,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {missions.map((mission) => (
             <MissionCard
-              key={mission.id}
+              key={mission.missionId}
               title={mission.title}
               description={mission.description}
-              level={mission.level}
-              duration={mission.duration}
+              level={mission.levelCode}
+              duration={`${mission.durationMinutes} min`}
               status={mission.status}
             />
           ))}

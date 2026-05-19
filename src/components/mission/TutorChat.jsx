@@ -11,6 +11,7 @@ import useAppStore from "../../store/useAppStore";
 import { speechToText } from "../../services/speechService";
 import { speakText } from "../../services/ttsService";
 import { sendChatMessage } from "../../services/chatService";
+import CorrectionCard from "./CorrectionCard";
 
 export default function TutorChat({ mission }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
@@ -36,6 +37,7 @@ Tell me something about yourself.
 
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [correction, setCorrection] = useState(null);
 
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -130,15 +132,16 @@ Tell me something about yourself.
 
     try {
       const result = await sendChatMessage(mission, transcript);
+      setCorrection(result.correction);
 
       const tutorMessage = {
         id: Date.now() + 1,
         sender: "tutor",
-        text: result.response,
+        text: result.reply,
       };
 
       addMessage(mission.id, tutorMessage);
-
+      console.log(tutorMessage);
       playTutorVoice(tutorMessage.text);
     } catch (error) {
       console.error(error);
@@ -166,11 +169,12 @@ Tell me something about yourself.
 
     try {
       const result = await sendChatMessage(mission, input);
+      setCorrection(result.correction);
 
       const tutorMessage = {
         id: Date.now() + 1,
         sender: "tutor",
-        text: result.response,
+        text: result.reply,
       };
 
       addMessage(mission.id, tutorMessage);
@@ -247,7 +251,7 @@ Tell me something about yourself.
             </div>
           </motion.div>
         )}
-
+        <CorrectionCard correction={correction} />
         <div ref={messagesEndRef}></div>
       </div>
 

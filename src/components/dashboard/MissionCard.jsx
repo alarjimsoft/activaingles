@@ -9,32 +9,44 @@ export default function MissionCard({
   status,
 }) {
   const statusConfig = {
-    active: {
+    ACTIVE: {
       border: "border-cyan-500/40",
+
       glow: "shadow-cyan-500/10",
+
       icon: <PlayCircle className="text-cyan-400" size={28} />,
+
       button: "Start Mission",
+
       buttonStyle: "bg-cyan-500 hover:bg-cyan-400 text-black",
     },
 
-    locked: {
+    LOCKED: {
       border: "border-zinc-800",
+
       glow: "",
+
       icon: <Lock className="text-zinc-500" size={28} />,
+
       button: "Locked",
+
       buttonStyle: "bg-zinc-800 text-zinc-500 cursor-not-allowed",
     },
 
-    completed: {
+    COMPLETED: {
       border: "border-emerald-500/40",
+
       glow: "shadow-emerald-500/10",
+
       icon: <CheckCircle2 className="text-emerald-400" size={28} />,
+
       button: "Completed",
+
       buttonStyle: "bg-emerald-500 hover:bg-emerald-400 text-black",
     },
   };
 
-  const current = statusConfig[status];
+  const current = statusConfig[status] || statusConfig.ACTIVE;
 
   return (
     <motion.div

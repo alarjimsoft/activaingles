@@ -3,6 +3,7 @@ import os
 from openai import OpenAI
 
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -40,11 +41,44 @@ Your goals:
 - Keep responses concise
 - Ask follow-up questions
 - Be friendly and motivating
+
+VERY IMPORTANT:
+
+If the student makes grammar mistakes:
+
+1. Detect the mistake
+2. Provide corrected version
+3. Explain briefly
+
+Return your response ONLY as valid JSON.
+
+Format:
+
+{{
+  "reply": "...",
+
+  "correction": {{
+    "original": "...",
+    "corrected": "...",
+    "explanation": "..."
+  }}
+}}
+
+If there are no mistakes:
+
+{{
+  "reply": "...",
+  "correction": null
+}}
 """
 
     response = client.chat.completions.create(
 
         model="gpt-4.1-mini",
+
+        response_format={
+           "type": "json_object"
+        },
 
         messages=[
 
@@ -61,8 +95,8 @@ Your goals:
 
         temperature=0.7
     )
-
-    return (
+  
+    return json.loads (
         response.choices[0]
         .message.content
     )

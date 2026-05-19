@@ -1,3 +1,4 @@
+import LoginPage from "../pages/LoginPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Dashboard from "../pages/Dashboard";
@@ -11,7 +12,8 @@ export default function AppRouter() {
     <BrowserRouter>
       <AnimatePresence mode="wait">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
 
           <Route path="/library" element={<Library />} />
 
