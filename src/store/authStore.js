@@ -1,29 +1,39 @@
 import { create } from "zustand";
 
-const useAuthStore = create((set) => ({
-  student: null,
+import { persist } from "zustand/middleware";
 
-  inscripcion: null,
-
-  isAuthenticated: false,
-
-  login: (student, inscripcion) =>
-    set({
-      student,
-
-      inscripcion,
-
-      isAuthenticated: true,
-    }),
-
-  logout: () =>
-    set({
+const useAuthStore = create(
+  persist(
+    (set) => ({
       student: null,
 
       inscripcion: null,
 
       isAuthenticated: false,
+
+      login: (student, inscripcion) =>
+        set({
+          student,
+
+          inscripcion,
+
+          isAuthenticated: true,
+        }),
+
+      logout: () =>
+        set({
+          student: null,
+
+          inscripcion: null,
+
+          isAuthenticated: false,
+        }),
     }),
-}));
+
+    {
+      name: "activa-ingles-auth",
+    },
+  ),
+);
 
 export default useAuthStore;
