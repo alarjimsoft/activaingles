@@ -1,7 +1,9 @@
 import { Lock, CheckCircle2, PlayCircle, Clock3, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function MissionCard({
+  missionId,
   title,
   description,
   level,
@@ -47,6 +49,7 @@ export default function MissionCard({
   };
 
   const current = statusConfig[status] || statusConfig.ACTIVE;
+  const navigate = useNavigate();
 
   return (
     <motion.div
@@ -120,6 +123,7 @@ export default function MissionCard({
 
       {/* Action Button */}
       <button
+        onClick={() => navigate(`/missions/${missionId}`)}
         className={`
           w-full
           mt-8

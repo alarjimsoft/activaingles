@@ -124,6 +124,7 @@ export default function Dashboard() {
           {missions.map((mission) => (
             <MissionCard
               key={mission.missionId}
+              missionId={mission.missionId}
               title={mission.title}
               description={mission.description}
               level={mission.levelCode}

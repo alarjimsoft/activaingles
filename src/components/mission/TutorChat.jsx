@@ -12,11 +12,19 @@ import { speechToText } from "../../services/speechService";
 import { speakText } from "../../services/ttsService";
 import { sendChatMessage } from "../../services/chatService";
 import CorrectionCard from "./CorrectionCard";
+import {
+  startConversation,
+  saveMessage,
+  getHistory,
+} from "../../services/conversationService";
+import useAuthStore from "../../store/authStore";
 
 export default function TutorChat({ mission }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
 
   const addMessage = useAppStore((state) => state.addMessage);
+  const inscripcion = useAuthStore((state) => state.inscripcion);
+
   /* const [messages, setMessages] = useState([
     {
       id: 1,
@@ -38,6 +46,7 @@ Tell me something about yourself.
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [correction, setCorrection] = useState(null);
+  const [conversationId, setConversationId] = useState(null);
 
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -49,6 +58,56 @@ Tell me something about yourself.
       behavior: "smooth",
     });
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    async function initConversation() {
+      try {
+        const result = await startConversation({
+          idInscripcion: inscripcion.idInscripcion,
+
+          missionId: mission.id,
+        });
+
+        setConversationId(result.conversationId);
+
+        console.log("Conversation created:", result.conversationId);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (inscripcion && mission) {
+      initConversation();
+    }
+  }, [inscripcion, mission]);
+
+  useEffect(() => {
+    async function loadHistory() {
+      if (!conversationId) return;
+
+      try {
+        const history = await getHistory(conversationId);
+
+        history.forEach((msg) => {
+          addMessage(
+            mission.id,
+
+            {
+              id: msg.message_id,
+
+              sender: msg.sender,
+
+              text: msg.message_text,
+            },
+          );
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadHistory();
+  }, [conversationId, addMessage, mission]);
 
   const startListening = async () => {
     try {
@@ -127,6 +186,13 @@ Tell me something about yourself.
     };
 
     addMessage(mission.id, userMessage);
+    if (conversationId) {
+      await saveMessage({
+        conversationId,
+        sender: "student",
+        messageText: transcript,
+      });
+    }
 
     setIsTyping(true);
 
@@ -141,6 +207,15 @@ Tell me something about yourself.
       };
 
       addMessage(mission.id, tutorMessage);
+      if (conversationId) {
+        await saveMessage({
+          conversationId,
+
+          sender: "tutor",
+
+          messageText: tutorMessage.text,
+        });
+      }
       console.log(tutorMessage);
       playTutorVoice(tutorMessage.text);
     } catch (error) {
@@ -161,6 +236,13 @@ Tell me something about yourself.
 
     //setMessages((prev) => [...prev, userMessage]);
     addMessage(mission.id, userMessage);
+    if (conversationId) {
+      await saveMessage({
+        conversationId,
+        sender: "student",
+        messageText: input,
+      });
+    }
 
     setInput("");
 
@@ -178,6 +260,13 @@ Tell me something about yourself.
       };
 
       addMessage(mission.id, tutorMessage);
+      if (conversationId) {
+        await saveMessage({
+          conversationId,
+          sender: "tutor",
+          messageText: tutorMessage.text,
+        });
+      }
 
       playTutorVoice(tutorMessage.text);
     } catch (error) {
