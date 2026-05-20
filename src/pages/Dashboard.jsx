@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import useAuthStore from "../store/authStore";
 
 import { getMissions } from "../services/missionService";
+import { getDashboardStats } from "../services/dashboardService";
 
 export default function Dashboard() {
   const student = useAuthStore((state) => state.student);
@@ -19,6 +20,23 @@ export default function Dashboard() {
   const inscripcion = useAuthStore((state) => state.inscripcion);
 
   const [missions, setMissions] = useState([]);
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const data = await getDashboardStats(inscripcion.idInscripcion);
+
+        setStats(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (inscripcion) {
+      loadStats();
+    }
+  }, [inscripcion]);
 
   useEffect(() => {
     async function loadMissions() {
@@ -93,13 +111,13 @@ export default function Dashboard() {
       >
         <StatCard
           title="Completed Missions"
-          value="05"
+          value={stats?.completed_missions || 0}
           subtitle="+2 this week"
         />
 
         <StatCard
           title="Study Time"
-          value="12h"
+          value={`${stats?.total_time || 0} min`}
           subtitle="Excellent consistency"
         />
 
@@ -108,7 +126,11 @@ export default function Dashboard() {
 
       {/* Progress */}
       <div className="mb-12">
-        <ProgressCard />
+        <ProgressCard
+          progress={stats?.avg_progress || 0}
+          completed={stats?.completed_missions || 0}
+          total={stats?.total_missions || 0}
+        />
       </div>
 
       {/* Missions */}

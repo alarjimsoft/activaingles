@@ -290,12 +290,17 @@ Tell me something about yourself.
           messageText: tutorMessage.text,
         });
       }
+
+      const totalMessages = messages.length + 1;
+      const progressPercent = Math.min(totalMessages * 10, 100);
+      const xpEarned = totalMessages * 5;
+
       // UPDATE PROGRESS
       await updateProgress({
         idInscripcion: inscripcion.idInscripcion,
         missionId: mission.id,
-        progressPercent: 25,
-        totalXpEarned: 10,
+        progressPercent,
+        totalXpEarned: xpEarned,
         totalMessages: messages.length + 1,
         totalTimeMinutes: 5,
         grammarScore: 85,
