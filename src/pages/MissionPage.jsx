@@ -7,16 +7,18 @@ import MissionSidebar from "../components/mission/MissionSidebar";
 import TutorChat from "../components/mission/TutorChat";
 
 import useAppStore from "../store/useAppStore";
+import useAuthStore from "../store/authStore";
 import { getMissions } from "../services/missionService";
 
 export default function MissionPage() {
   const { id } = useParams();
+  const inscripcion = useAuthStore((state) => state.inscripcion);
   const setMissions = useAppStore((state) => state.setMissions);
   const missions = useAppStore((state) => state.missions);
   useEffect(() => {
     async function loadMissions() {
       try {
-        const data = await getMissions("INGLES_A1");
+        const data = await getMissions(inscripcion.idCurso);
 
         setMissions(data);
       } catch (error) {
@@ -24,12 +26,14 @@ export default function MissionPage() {
       }
     }
 
-    if (missions.length === 0) {
+    if (missions.length === 0 && inscripcion) {
       loadMissions();
     }
-  }, []);
+  }, [inscripcion]);
 
-  const mission = missions.find((m) => m.missionId === Number(id));
+  console.log("MISSIONS:", missions);
+  console.log("URL ID:", id);
+  const mission = missions.find((m) => m.id === Number(id));
   const [progress, setProgress] = useState(0);
 
   if (missions.length === 0) {

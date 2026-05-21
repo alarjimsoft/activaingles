@@ -19,6 +19,7 @@ import {
 } from "../../services/conversationService";
 import useAuthStore from "../../store/authStore";
 import { startProgress, updateProgress } from "../../services/progressService";
+import { getMissionProgress } from "../../services/progressService";
 
 export default function TutorChat({ mission, setProgress }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
@@ -86,6 +87,32 @@ Tell me something about yourself.
     if (inscripcion && mission) {
       initConversation();
     }
+  }, [inscripcion, mission]);
+
+  useEffect(() => {
+    async function loadProgress() {
+      try {
+        if (!inscripcion || !mission) return;
+
+        const data = await getMissionProgress(
+          inscripcion.idInscripcion,
+
+          mission.id,
+        );
+
+        if (data.items?.length > 0) {
+          const progressData = data.items[0];
+
+          setProgress(progressData.progress_percent || 0);
+
+          console.log("Loaded progress:", progressData);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadProgress();
   }, [inscripcion, mission]);
 
   useEffect(() => {

@@ -80,3 +80,11 @@ export async function completeMission({
 
   return response.data;
 }
+
+export async function getMissionProgress(idInscripcion, missionId) {
+  const response = await fetch(
+    `http://localhost:8080/ords/admin/progress/mission/${idInscripcion}/${missionId}`,
+  );
+
+  return await response.json();
+}

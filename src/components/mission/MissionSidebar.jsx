@@ -1,6 +1,6 @@
 import { Target, BookOpen, Languages, Trophy } from "lucide-react";
 
-export default function MissionSidebar({ mission }) {
+export default function MissionSidebar({ mission, progress }) {
   return (
     <div
       className="
@@ -96,9 +96,7 @@ export default function MissionSidebar({ mission }) {
           ></div>
         </div>
 
-        <p className="text-zinc-500 text-xs mt-3">
-          {mission.progress}% completed
-        </p>
+        <p className="text-zinc-500 text-xs mt-3">{progress}% completed</p>
       </div>
     </div>
   );

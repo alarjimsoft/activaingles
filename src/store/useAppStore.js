@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { missions } from "../data/missions";
-
 const initialConversation = {
   1: [
     {
@@ -55,14 +53,14 @@ const useAppStore = create(
       },
 
       // Missions
-      missions,
+      missions: [],
 
       setMissions: (missions) =>
         set({
           missions,
         }),
 
-      currentMission: missions[0],
+      currentMission: null, // missions[0],
 
       setCurrentMission: (mission) =>
         set({
