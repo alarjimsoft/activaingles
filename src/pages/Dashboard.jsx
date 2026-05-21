@@ -145,12 +145,12 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {missions.map((mission) => (
             <MissionCard
-              key={mission.missionId}
-              missionId={mission.missionId}
+              key={mission.id}
+              id={mission.id}
               title={mission.title}
               description={mission.description}
-              level={mission.levelCode}
-              duration={`${mission.durationMinutes} min`}
+              level={mission.level}
+              duration={mission.duration}
               status={mission.status}
             />
           ))}

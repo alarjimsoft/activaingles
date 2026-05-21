@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 export default function MissionCard({
-  missionId,
+  id,
   title,
   description,
   level,
@@ -50,6 +50,8 @@ export default function MissionCard({
 
   const current = statusConfig[status] || statusConfig.ACTIVE;
   const navigate = useNavigate();
+
+  console.log("MISSION CARD ID:", id);
 
   return (
     <motion.div
@@ -123,7 +125,7 @@ export default function MissionCard({
 
       {/* Action Button */}
       <button
-        onClick={() => navigate(`/missions/${missionId}`)}
+        onClick={() => navigate(`/missions/${id}`)}
         className={`
           w-full
           mt-8

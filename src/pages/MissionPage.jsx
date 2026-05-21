@@ -1,48 +1,40 @@
 import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 
 import MainLayout from "../layouts/MainLayout";
 
 import MissionSidebar from "../components/mission/MissionSidebar";
+
 import TutorChat from "../components/mission/TutorChat";
 
 import useAppStore from "../store/useAppStore";
-import useAuthStore from "../store/authStore";
-import { getMissions } from "../services/missionService";
 
 export default function MissionPage() {
-  const { id } = useParams();
-  const inscripcion = useAuthStore((state) => state.inscripcion);
-  const setMissions = useAppStore((state) => state.setMissions);
+  const params = useParams();
+
+  const id = params.id;
+
   const missions = useAppStore((state) => state.missions);
-  useEffect(() => {
-    async function loadMissions() {
-      try {
-        const data = await getMissions(inscripcion.idCurso);
 
-        setMissions(data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    if (missions.length === 0 && inscripcion) {
-      loadMissions();
-    }
-  }, [inscripcion]);
-
-  console.log("MISSIONS:", missions);
-  console.log("URL ID:", id);
-  const mission = missions.find((m) => m.id === Number(id));
   const [progress, setProgress] = useState(0);
 
-  if (missions.length === 0) {
+  console.log("MISSIONS:", missions);
+
+  console.log("PARAMS:", params);
+
+  console.log("URL ID:", id);
+
+  if (!missions.length) {
     return (
       <MainLayout>
         <h1 className="text-white text-4xl">Loading missions...</h1>
       </MainLayout>
     );
   }
+
+  const mission = missions.find((m) => m.id === Number(id));
+
   if (!mission) {
     return (
       <MainLayout>
