@@ -18,13 +18,9 @@ import {
   getHistory,
 } from "../../services/conversationService";
 import useAuthStore from "../../store/authStore";
-import {
-  startProgress,
-  updateProgress,
-  completeMission,
-} from "../../services/progressService";
+import { startProgress, updateProgress } from "../../services/progressService";
 
-export default function TutorChat({ mission }) {
+export default function TutorChat({ mission, setProgress }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
 
   const addMessage = useAppStore((state) => state.addMessage);
@@ -227,12 +223,17 @@ Tell me something about yourself.
           messageText: tutorMessage.text,
         });
       }
+      const totalMessages = messages.length + 1;
+      const progressPercent = Math.min(totalMessages * 10, 100);
+      const xpEarned = totalMessages * 5;
+      setProgress(progressPercent);
+
       // UPDATE PROGRESS
       await updateProgress({
         idInscripcion: inscripcion.idInscripcion,
         missionId: mission.id,
-        progressPercent: 25,
-        totalXpEarned: 10,
+        progressPercent,
+        totalXpEarned: xpEarned,
         totalMessages: messages.length + 1,
         totalTimeMinutes: 5,
         grammarScore: 85,
@@ -294,6 +295,7 @@ Tell me something about yourself.
       const totalMessages = messages.length + 1;
       const progressPercent = Math.min(totalMessages * 10, 100);
       const xpEarned = totalMessages * 5;
+      setProgress(progressPercent);
 
       // UPDATE PROGRESS
       await updateProgress({

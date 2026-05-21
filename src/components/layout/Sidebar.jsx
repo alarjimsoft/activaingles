@@ -11,7 +11,11 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 import { motion } from "framer-motion";
 
+import { useEffect, useState } from "react";
+
 import useAuthStore from "../../store/authStore";
+
+import { getDashboardStats } from "../../services/dashboardService";
 
 const menuItems = [
   {
@@ -45,6 +49,26 @@ export default function Sidebar() {
   const logout = useAuthStore((state) => state.logout);
 
   const student = useAuthStore((state) => state.student);
+
+  const inscripcion = useAuthStore((state) => state.inscripcion);
+
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        if (!inscripcion) return;
+
+        const data = await getDashboardStats(inscripcion.idInscripcion);
+
+        setStats(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadStats();
+  }, [inscripcion]);
 
   function handleLogout() {
     logout();
@@ -205,6 +229,7 @@ export default function Sidebar() {
             {student?.nivel || "A1"}
           </h2>
 
+          {/* Progress Bar */}
           <div
             className="
               w-full
@@ -216,11 +241,15 @@ export default function Sidebar() {
           >
             <div
               className="
-                w-1/3
                 h-full
                 bg-cyan-500
                 rounded-full
+                transition-all
+                duration-500
               "
+              style={{
+                width: `${stats?.avg_progress || 0}%`,
+              }}
             />
           </div>
 
@@ -231,7 +260,7 @@ export default function Sidebar() {
               mt-2
             "
           >
-            35% completed
+            {stats?.avg_progress || 0}% completed
           </p>
         </div>
 
