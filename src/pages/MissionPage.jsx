@@ -1,7 +1,12 @@
 import { useParams, useLocation } from "react-router-dom";
 
+import MainLayout from "../layouts/MainLayout";
+
+import MissionSidebar from "../components/mission/MissionSidebar";
+import TutorChat from "../components/mission/TutorChat";
+
 export default function MissionPage() {
-  const { id } = useParams();
+  useParams();
 
   const location = useLocation();
 
@@ -10,27 +15,34 @@ export default function MissionPage() {
   console.log("MISSION:", mission);
 
   if (!mission) {
-    return <div style={{ color: "white" }}>Mission not found</div>;
+    return (
+      <MainLayout>
+        <div className="text-white p-10">Mission not found</div>
+      </MainLayout>
+    );
   }
 
   return (
-    <div
-      style={{
-        color: "white",
-        padding: "40px",
-        background: "black",
-        minHeight: "100vh",
-      }}
-    >
-      <h1>MISSION PAGE WORKS</h1>
+    <MainLayout>
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="text-white text-5xl font-bold">{mission.title}</h1>
 
-      <p>{mission.title}</p>
+        <p className="text-zinc-400 mt-4 text-lg">{mission.description}</p>
+      </div>
 
-      <p>{mission.description}</p>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Sidebar */}
+        <div>
+          <MissionSidebar mission={mission} />
+        </div>
 
-      <p>{mission.level}</p>
-
-      <p>{mission.duration}</p>
-    </div>
+        {/* Chat */}
+        <div className="xl:col-span-2">
+          <TutorChat mission={mission} />
+        </div>
+      </div>
+    </MainLayout>
   );
 }

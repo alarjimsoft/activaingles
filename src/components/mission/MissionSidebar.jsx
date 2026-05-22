@@ -1,6 +1,6 @@
-import { Target, BookOpen, Languages, Trophy } from "lucide-react";
+import { Target, BookOpen, Trophy } from "lucide-react";
 
-export default function MissionSidebar({ mission, progress }) {
+export default function MissionSidebar({ mission, progress = 0 }) {
   return (
     <div
       className="
@@ -19,13 +19,15 @@ export default function MissionSidebar({ mission, progress }) {
         <div className="flex items-center gap-3 mb-4">
           <Target className="text-cyan-400" />
 
-          <h3 className="text-white font-semibold">Objectives</h3>
+          <h3 className="text-white font-semibold">Mission Information</h3>
         </div>
 
         <ul className="space-y-3 text-zinc-400 text-sm">
-          {mission.objectives.map((objective) => (
-            <li key={objective}>• {objective}</li>
-          ))}
+          <li>• Complete the mission conversation</li>
+
+          <li>• Practice English expressions</li>
+
+          <li>• Improve grammar and vocabulary</li>
         </ul>
       </div>
 
@@ -44,40 +46,11 @@ export default function MissionSidebar({ mission, progress }) {
             p-4
           "
         >
-          <p className="text-zinc-300 text-sm">
-            <span className="text-cyan-400">{mission.grammar.title}</span>
+          <p className="text-cyan-400 text-sm font-semibold">
+            {mission.grammarTitle}
           </p>
 
-          <p className="text-zinc-500 text-xs mt-2">
-            {mission.grammar.example}
-          </p>
-        </div>
-      </div>
-
-      {/* Vocabulary */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <Languages className="text-emerald-400" />
-
-          <h3 className="text-white font-semibold">Vocabulary</h3>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {/*{["name", "student", "teacher", "engineer", "country"].map((word) => (*/}
-          {mission.vocabulary.map((word) => (
-            <span
-              key={word}
-              className="
-                bg-zinc-800
-                text-zinc-300
-                px-3 py-2
-                rounded-xl
-                text-sm
-              "
-            >
-              {word}
-            </span>
-          ))}
+          <p className="text-zinc-400 text-xs mt-2">{mission.grammarExample}</p>
         </div>
       </div>
 
@@ -92,7 +65,9 @@ export default function MissionSidebar({ mission, progress }) {
         <div className="w-full h-3 bg-zinc-800 rounded-full">
           <div
             className="h-full bg-cyan-500 rounded-full"
-            style={{ width: `${mission.progress}%` }}
+            style={{
+              width: `${progress}%`,
+            }}
           ></div>
         </div>
 
