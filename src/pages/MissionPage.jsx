@@ -1,4 +1,5 @@
 import { useParams, useLocation } from "react-router-dom";
+import { useState } from "react";
 
 import MainLayout from "../layouts/MainLayout";
 
@@ -6,11 +7,12 @@ import MissionSidebar from "../components/mission/MissionSidebar";
 import TutorChat from "../components/mission/TutorChat";
 
 export default function MissionPage() {
-  useParams();
+  //useParams();
 
   const location = useLocation();
 
   const mission = location.state?.mission;
+  const [progress, setProgress] = useState(0);
 
   console.log("MISSION:", mission);
 
@@ -35,12 +37,12 @@ export default function MissionPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div>
-          <MissionSidebar mission={mission} />
+          <MissionSidebar mission={mission} progress={progress} />
         </div>
 
         {/* Chat */}
         <div className="xl:col-span-2">
-          <TutorChat mission={mission} />
+          <TutorChat mission={mission} setProgress={setProgress} />
         </div>
       </div>
     </MainLayout>

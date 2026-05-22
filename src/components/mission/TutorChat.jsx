@@ -96,17 +96,12 @@ Tell me something about yourself.
 
         const data = await getMissionProgress(
           inscripcion.idInscripcion,
-
           mission.id,
         );
 
-        if (data.items?.length > 0) {
-          const progressData = data.items[0];
+        setProgress(data.progress_percent || 0);
 
-          setProgress(progressData.progress_percent || 0);
-
-          console.log("Loaded progress:", progressData);
-        }
+        console.log("Loaded progress:", data);
       } catch (error) {
         console.error(error);
       }

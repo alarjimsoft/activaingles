@@ -83,7 +83,7 @@ export async function completeMission({
 
 export async function getMissionProgress(idInscripcion, missionId) {
   const response = await fetch(
-    `http://localhost:8080/ords/admin/progress/mission/${idInscripcion}/${missionId}`,
+    `https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api/progress/mission/${idInscripcion}/${missionId}`,
   );
 
   return await response.json();
