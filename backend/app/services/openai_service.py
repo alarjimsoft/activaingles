@@ -18,6 +18,14 @@ def get_tutor_response(
     mission,
     user_message
 ):
+    objectives = mission.get(
+        "objectives",
+        [
+            "Practice English conversation",
+            "Improve grammar",
+            "Answer naturally"
+        ]
+    )
 
     system_prompt = f"""
 You are an English tutor
@@ -31,7 +39,7 @@ Mission description:
 {mission["description"]}
 
 Objectives:
-{", ".join(mission["objectives"])}
+{", ".join(objectives)}
 
 Your goals:
 
