@@ -1,15 +1,14 @@
 import { Lock, CheckCircle2, PlayCircle, Clock3, Sparkles } from "lucide-react";
+
 import { motion } from "framer-motion";
+
 import { useNavigate } from "react-router-dom";
 
-export default function MissionCard({
-  id,
-  title,
-  description,
-  level,
-  duration,
-  status,
-}) {
+export default function MissionCard({ mission }) {
+  const { id, title, description, level, duration, status } = mission;
+
+  const navigate = useNavigate();
+
   const statusConfig = {
     ACTIVE: {
       border: "border-cyan-500/40",
@@ -49,14 +48,17 @@ export default function MissionCard({
   };
 
   const current = statusConfig[status] || statusConfig.ACTIVE;
-  const navigate = useNavigate();
-
-  console.log("MISSION CARD ID:", id);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{
+        opacity: 0,
+        y: 30,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
       whileHover={{
         scale: 1.03,
         y: -5,
@@ -125,7 +127,13 @@ export default function MissionCard({
 
       {/* Action Button */}
       <button
-        onClick={() => navigate(`/missions/${id}`)}
+        onClick={() =>
+          navigate(`/missions/${id}`, {
+            state: {
+              mission,
+            },
+          })
+        }
         className={`
           w-full
           mt-8
