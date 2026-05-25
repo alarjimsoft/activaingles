@@ -127,13 +127,15 @@ export default function MissionCard({ mission }) {
 
       {/* Action Button */}
       <button
-        onClick={() =>
+        disabled={status === "LOCKED"}
+        onClick={() => {
+          if (status === "LOCKED") return;
           navigate(`/missions/${id}`, {
             state: {
               mission,
             },
-          })
-        }
+          });
+        }}
         className={`
           w-full
           mt-8

@@ -21,6 +21,18 @@ export default function Dashboard() {
 
   const [missions, setMissions] = useState([]);
   const [stats, setStats] = useState(null);
+  const groupedMissions = missions.reduce((acc, mission) => {
+    //const topicTitle = mission.topicTitle || "General";
+    const topicTitle = mission.topicTitle;
+
+    if (!acc[topicTitle]) {
+      acc[topicTitle] = [];
+    }
+
+    acc[topicTitle].push(mission);
+
+    return acc;
+  }, {});
 
   useEffect(() => {
     async function loadStats() {
@@ -43,9 +55,13 @@ export default function Dashboard() {
       try {
         if (!inscripcion) return;
 
-        const data = await getMissions(inscripcion.idCurso);
+        const data = await getMissions(
+          inscripcion.idCurso,
+          inscripcion.idInscripcion,
+        );
 
         setMissions(data);
+        console.log(missions);
       } catch (error) {
         console.error(error);
       }
@@ -142,18 +158,34 @@ export default function Dashboard() {
         </div>
 
         {/* Dynamic Mission Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {missions.map((mission) => (
-            <MissionCard
-              key={mission.id}
-              mission={mission}
-              title={mission.title}
-              description={mission.description}
-              level={mission.level}
-              duration={mission.duration}
-              status={mission.status}
-            />
-          ))}
+        <div className="space-y-16">
+          {Object.entries(groupedMissions).map(
+            ([topicTitle, topicMissions]) => (
+              <div key={topicTitle}>
+                {/* Topic Header */}
+                <div className="mb-10">
+                  <h2
+                    className="text-cyan-400 text-4xl font-extrabold mb-4 tracking-wide"
+                    style={{
+                      color: "#22d3ee",
+                      opacity: 1,
+                    }}
+                  >
+                    {topicTitle}
+                  </h2>
+                  <p className="text-zinc-500 text-sm mb-6">Topic Missions</p>
+                  <div className="w-full h-px bg-zinc-800 mt-4"></div>
+                </div>
+
+                {/* Missions Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  {topicMissions.map((mission) => (
+                    <MissionCard key={mission.missionId} mission={mission} />
+                  ))}
+                </div>
+              </div>
+            ),
+          )}
         </div>
       </div>
     </MainLayout>
