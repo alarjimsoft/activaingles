@@ -20,12 +20,14 @@ import {
 import useAuthStore from "../../store/authStore";
 import { startProgress, updateProgress } from "../../services/progressService";
 import { getMissionProgress } from "../../services/progressService";
+import { exportConversationPdf } from "../../utils/conversationPdf";
 
 export default function TutorChat({ mission, setProgress }) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
 
   const addMessage = useAppStore((state) => state.addMessage);
   const inscripcion = useAuthStore((state) => state.inscripcion);
+  const student = useAuthStore((state) => state.student);
 
   /* const [messages, setMessages] = useState([
     {
@@ -352,19 +354,35 @@ Tell me something about yourself.
       {/* Header */}
       <div
         className="
-          border-b border-zinc-800
-          p-6
-          flex items-center gap-4
-        "
+    border-b border-zinc-800
+    p-6
+  "
       >
-        <div className="bg-cyan-500 p-3 rounded-2xl">
-          <Bot className="text-black" />
-        </div>
+        <div className="flex items-start gap-4">
+          <div className="bg-cyan-500 p-3 rounded-2xl">
+            <Bot className="text-black" />
+          </div>
 
-        <div>
-          <h2 className="text-white text-xl font-bold">AI Tutor</h2>
-
-          <p className="text-zinc-400 text-sm">Mission active</p>
+          <div className="flex-1">
+            <h2 className="text-white text-xl font-bold">AI Tutor</h2>
+            <p className="text-zinc-400 text-sm mb-4">Mission active</p>
+            <button
+              onClick={() => exportConversationPdf(mission, messages, student)}
+              className="
+          bg-cyan-500
+          hover:bg-cyan-400
+          text-black
+          px-4
+          py-2
+          rounded-xl
+          text-sm
+          font-semibold
+          transition
+        "
+            >
+              Export PDF
+            </button>
+          </div>
         </div>
       </div>
 
