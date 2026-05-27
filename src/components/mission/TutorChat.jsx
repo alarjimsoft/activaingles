@@ -228,7 +228,12 @@ Tell me something about yourself.
     setIsTyping(true);
 
     try {
-      const result = await sendChatMessage(mission, transcript);
+      const result = await sendChatMessage({
+        id_inscripcion: inscripcion.idInscripcion,
+        mission_id: mission.id,
+        mission,
+        message: transcript,
+      });
       setCorrection(result.correction);
 
       const tutorMessage = {
@@ -298,7 +303,12 @@ Tell me something about yourself.
     setIsTyping(true);
 
     try {
-      const result = await sendChatMessage(mission, input);
+      const result = await sendChatMessage({
+        id_inscripcion: inscripcion.idInscripcion,
+        mission_id: mission.id,
+        mission,
+        message: input,
+      });
       setCorrection(result.correction);
 
       const tutorMessage = {

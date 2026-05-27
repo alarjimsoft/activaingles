@@ -101,17 +101,40 @@ export default function Dashboard() {
         {/* User Badge */}
         <div
           className="
-            bg-zinc-900
-            border border-zinc-800
-            px-5 py-4
-            rounded-2xl
-          "
+    bg-zinc-900
+    border border-zinc-800
+    px-5 py-4
+    rounded-2xl
+    min-w-[220px]
+  "
         >
           <p className="text-zinc-400 text-sm">Current Level</p>
 
-          <h2 className="text-cyan-400 text-2xl font-bold mt-1">
-            {student.nivel} Beginner
+          <h2 className="text-cyan-300 text-3xl font-extrabold mt-1">
+            Level {stats?.level || 1}
           </h2>
+
+          <p className="text-zinc-500 text-sm mt-2">
+            {stats?.total_xp || 0} XP
+          </p>
+
+          {/* XP Progress */}
+          <div className="w-full h-2 bg-zinc-800 rounded-full mt-4">
+            <div
+              className="h-full bg-cyan-500 rounded-full"
+              style={{
+                width: `${
+                  ((stats?.total_xp || 0) / (stats?.xp_next_level || 100)) * 100
+                }%`,
+              }}
+            ></div>
+          </div>
+
+          <p className="text-zinc-500 text-xs mt-2">
+            {stats?.total_xp || 0}
+            {" / "}
+            {stats?.xp_next_level || 100} XP
+          </p>
         </div>
       </motion.div>
 
