@@ -225,7 +225,7 @@ export default function TutorChat({
           /*
             Send message
           */
-          sendTranscriptMessage(transcript);
+          sendTranscriptMessage(transcript, pronunciationData);
 
           setInput("");
         } catch (error) {
@@ -274,7 +274,7 @@ export default function TutorChat({
   /*
     Send transcript message
   */
-  const sendTranscriptMessage = async (transcript) => {
+  const sendTranscriptMessage = async (transcript, pronunciationData) => {
     if (!transcript.trim()) return;
 
     const userMessage = {
@@ -358,7 +358,8 @@ export default function TutorChat({
 
         grammarScore: 85,
 
-        pronunciationScore: pronunciationResult?.pronunciation_score || 0,
+        // pronunciationScore: pronunciationResult?.pronunciation_score || 0,
+        pronunciationScore: pronunciationData?.pronunciation_score || 0,
       });
 
       console.log(tutorMessage);
@@ -460,7 +461,8 @@ export default function TutorChat({
 
         grammarScore: 85,
 
-        pronunciationScore: pronunciationResult?.pronunciation_score || 0,
+        pronunciationScore: 0,
+        //pronunciationScore: pronunciationResult?.pronunciation_score || 0,
       });
 
       playTutorVoice(tutorMessage.text);
