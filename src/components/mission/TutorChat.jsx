@@ -11,58 +11,70 @@ import useAppStore from "../../store/useAppStore";
 import { speechToText } from "../../services/speechService";
 import { speakText } from "../../services/ttsService";
 import { sendChatMessage } from "../../services/chatService";
+
 import CorrectionCard from "./CorrectionCard";
+
 import {
   startConversation,
   saveMessage,
   getHistory,
 } from "../../services/conversationService";
+
 import useAuthStore from "../../store/authStore";
-import { startProgress, updateProgress } from "../../services/progressService";
-import { getMissionProgress } from "../../services/progressService";
+
+import {
+  startProgress,
+  updateProgress,
+  getMissionProgress,
+} from "../../services/progressService";
+
 import { exportConversationPdf } from "../../utils/conversationPdf";
 
-export default function TutorChat({ mission, setProgress }) {
+import { evaluatePronunciation } from "../../services/pronunciationService";
+
+export default function TutorChat({
+  mission,
+
+  setProgress,
+}) {
   const messages = useAppStore((state) => state.getConversation(mission.id));
 
   const addMessage = useAppStore((state) => state.addMessage);
+
   const inscripcion = useAuthStore((state) => state.inscripcion);
+
   const student = useAuthStore((state) => state.student);
-
-  /* const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: "tutor",
-      text: `
-Hello 👋
-
-Today we will practice:
-
-${mission.title}
-
-Tell me something about yourself.
-      `,
-    },
-  ]); */
 
   const [input, setInput] = useState("");
 
   const [isTyping, setIsTyping] = useState(false);
+
   const [isListening, setIsListening] = useState(false);
+
   const [correction, setCorrection] = useState(null);
+
   const [conversationId, setConversationId] = useState(null);
 
+  const [pronunciationResult, setPronunciationResult] = useState(null);
+
   const messagesEndRef = useRef(null);
+
   const mediaRecorderRef = useRef(null);
+
   const audioChunksRef = useRef([]);
 
-  // Auto Scroll
+  /*
+    Auto Scroll
+  */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
   }, [messages, isTyping]);
 
+  /*
+    Init conversation
+  */
   useEffect(() => {
     async function initConversation() {
       try {
@@ -73,7 +85,10 @@ Tell me something about yourself.
         });
 
         setConversationId(result.conversationId);
-        // START PROGRESS
+
+        /*
+          START PROGRESS
+        */
         await startProgress({
           idInscripcion: inscripcion.idInscripcion,
 
@@ -91,6 +106,9 @@ Tell me something about yourself.
     }
   }, [inscripcion, mission]);
 
+  /*
+    Load progress
+  */
   useEffect(() => {
     async function loadProgress() {
       try {
@@ -98,6 +116,7 @@ Tell me something about yourself.
 
         const data = await getMissionProgress(
           inscripcion.idInscripcion,
+
           mission.id,
         );
 
@@ -112,6 +131,9 @@ Tell me something about yourself.
     loadProgress();
   }, [inscripcion, mission]);
 
+  /*
+    Load history
+  */
   useEffect(() => {
     async function loadHistory() {
       if (!conversationId) return;
@@ -140,7 +162,11 @@ Tell me something about yourself.
     loadHistory();
   }, [conversationId, addMessage, mission]);
 
+  /*
+    Speech recognition
+  */
   const startListening = async () => {
+    setPronunciationResult(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -159,15 +185,48 @@ Tell me something about yourself.
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
-        });
+        const audioBlob = new Blob(
+          audioChunksRef.current,
+
+          {
+            type: "audio/webm",
+          },
+        );
 
         try {
+          /*
+            Speech To Text
+          */
           const result = await speechToText(audioBlob);
 
-          setInput(result.transcript);
-          sendTranscriptMessage(result.transcript);
+          /*
+            Transcript
+          */
+          const transcript = result.transcript;
+
+          /*
+            Pronunciation Assessment
+          */
+          const pronunciationData = await evaluatePronunciation(
+            audioBlob,
+
+            transcript,
+          );
+
+          console.log(pronunciationData);
+
+          setPronunciationResult(pronunciationData);
+
+          /*
+            Update input
+          */
+          setInput(transcript);
+
+          /*
+            Send message
+          */
+          sendTranscriptMessage(transcript);
+
           setInput("");
         } catch (error) {
           console.error(error);
@@ -182,7 +241,9 @@ Tell me something about yourself.
 
       setIsListening(true);
 
-      // Stop after 4 seconds
+      /*
+        Stop after 4 seconds
+      */
       setTimeout(() => {
         mediaRecorder.stop();
       }, 4000);
@@ -193,6 +254,9 @@ Tell me something about yourself.
     }
   };
 
+  /*
+    Play tutor voice
+  */
   const playTutorVoice = async (text) => {
     try {
       const audioBlob = await speakText(text);
@@ -207,20 +271,28 @@ Tell me something about yourself.
     }
   };
 
+  /*
+    Send transcript message
+  */
   const sendTranscriptMessage = async (transcript) => {
     if (!transcript.trim()) return;
 
     const userMessage = {
       id: Date.now(),
+
       sender: "user",
+
       text: transcript,
     };
 
     addMessage(mission.id, userMessage);
+
     if (conversationId) {
       await saveMessage({
         conversationId,
+
         sender: "student",
+
         messageText: transcript,
       });
     }
@@ -230,19 +302,26 @@ Tell me something about yourself.
     try {
       const result = await sendChatMessage({
         id_inscripcion: inscripcion.idInscripcion,
+
         mission_id: mission.id,
+
         mission,
+
         message: transcript,
       });
+
       setCorrection(result.correction);
 
       const tutorMessage = {
         id: Date.now() + 1,
+
         sender: "tutor",
+
         text: result.reply,
       };
 
       addMessage(mission.id, tutorMessage);
+
       if (conversationId) {
         await saveMessage({
           conversationId,
@@ -252,24 +331,38 @@ Tell me something about yourself.
           messageText: tutorMessage.text,
         });
       }
+
       const totalMessages = messages.length + 1;
+
       const progressPercent = Math.min(totalMessages * 10, 100);
+
       const xpEarned = totalMessages * 5;
+
       setProgress(progressPercent);
 
-      // UPDATE PROGRESS
+      /*
+        UPDATE PROGRESS
+      */
       await updateProgress({
         idInscripcion: inscripcion.idInscripcion,
+
         missionId: mission.id,
+
         progressPercent,
+
         totalXpEarned: xpEarned,
+
         totalMessages: messages.length + 1,
+
         totalTimeMinutes: 5,
+
         grammarScore: 85,
-        pronunciationScore: 80,
+
+        pronunciationScore: pronunciationResult?.pronunciation_score || 0,
       });
 
       console.log(tutorMessage);
+
       playTutorVoice(tutorMessage.text);
     } catch (error) {
       console.error(error);
@@ -278,70 +371,98 @@ Tell me something about yourself.
     }
   };
 
+  /*
+    Send text message
+  */
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = {
       id: Date.now(),
+
       sender: "user",
+
       text: input,
     };
 
-    //setMessages((prev) => [...prev, userMessage]);
     addMessage(mission.id, userMessage);
+
     if (conversationId) {
       await saveMessage({
         conversationId,
+
         sender: "student",
+
         messageText: input,
       });
     }
 
     setInput("");
 
-    // Typing simulation
     setIsTyping(true);
 
     try {
       const result = await sendChatMessage({
         id_inscripcion: inscripcion.idInscripcion,
+
         mission_id: mission.id,
+
         mission,
+
         message: input,
       });
+
       setCorrection(result.correction);
 
       const tutorMessage = {
         id: Date.now() + 1,
+
         sender: "tutor",
+
         text: result.reply,
       };
 
       addMessage(mission.id, tutorMessage);
+
       if (conversationId) {
         await saveMessage({
           conversationId,
+
           sender: "tutor",
+
           messageText: tutorMessage.text,
         });
       }
 
       const totalMessages = messages.length + 1;
+
       const progressPercent = Math.min(totalMessages * 10, 100);
+
       const xpEarned = totalMessages * 5;
+
       setProgress(progressPercent);
 
-      // UPDATE PROGRESS
+      /*
+        UPDATE PROGRESS
+      */
       await updateProgress({
         idInscripcion: inscripcion.idInscripcion,
+
         missionId: mission.id,
+
         progressPercent,
+
         totalXpEarned: xpEarned,
+
         totalMessages: messages.length + 1,
+
         totalTimeMinutes: 5,
+
         grammarScore: 85,
-        pronunciationScore: 80,
+
+        pronunciationScore: pronunciationResult?.pronunciation_score || 0,
       });
+
       playTutorVoice(tutorMessage.text);
     } catch (error) {
       console.error(error);
@@ -364,9 +485,9 @@ Tell me something about yourself.
       {/* Header */}
       <div
         className="
-    border-b border-zinc-800
-    p-6
-  "
+          border-b border-zinc-800
+          p-6
+        "
       >
         <div className="flex items-start gap-4">
           <div className="bg-cyan-500 p-3 rounded-2xl">
@@ -375,20 +496,30 @@ Tell me something about yourself.
 
           <div className="flex-1">
             <h2 className="text-white text-xl font-bold">AI Tutor</h2>
+
             <p className="text-zinc-400 text-sm mb-4">Mission active</p>
+
             <button
-              onClick={() => exportConversationPdf(mission, messages, student)}
+              onClick={() =>
+                exportConversationPdf(
+                  mission,
+
+                  messages,
+
+                  student,
+                )
+              }
               className="
-          bg-cyan-500
-          hover:bg-cyan-400
-          text-black
-          px-4
-          py-2
-          rounded-xl
-          text-sm
-          font-semibold
-          transition
-        "
+                bg-cyan-500
+                hover:bg-cyan-400
+                text-black
+                px-4
+                py-2
+                rounded-xl
+                text-sm
+                font-semibold
+                transition
+              "
             >
               Export PDF
             </button>
@@ -406,7 +537,7 @@ Tell me something about yourself.
           />
         ))}
 
-        {/* Typing Indicator */}
+        {/* Typing */}
         {isTyping && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -430,9 +561,142 @@ Tell me something about yourself.
             </div>
           </motion.div>
         )}
+
         <CorrectionCard correction={correction} />
+
         <div ref={messagesEndRef}></div>
       </div>
+
+      {/* Pronunciation Scores */}
+      {pronunciationResult && (
+        <div
+          className="
+              mx-4
+              mb-4
+              bg-zinc-900
+              border border-cyan-500/30
+              rounded-2xl
+              p-4
+            "
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-cyan-400 font-bold">
+              Pronunciation Assessment
+            </h3>
+
+            <span
+              className="
+                  text-xs
+                  bg-cyan-500/20
+                  text-cyan-300
+                  px-2
+                  py-1
+                  rounded-lg
+                "
+            >
+              AI Speech Analysis
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {/* Pronunciation */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-zinc-300">Pronunciation</span>
+
+                <span className="text-cyan-400 font-semibold">
+                  {Math.round(pronunciationResult.pronunciation_score)}
+                </span>
+              </div>
+
+              <div className="w-full bg-zinc-800 rounded-full h-2">
+                <div
+                  className="
+                      bg-cyan-400
+                      h-2
+                      rounded-full
+                    "
+                  style={{
+                    width: `${pronunciationResult.pronunciation_score}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Accuracy */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-zinc-300">Accuracy</span>
+
+                <span className="text-cyan-400 font-semibold">
+                  {Math.round(pronunciationResult.accuracy_score)}
+                </span>
+              </div>
+
+              <div className="w-full bg-zinc-800 rounded-full h-2">
+                <div
+                  className="
+                      bg-green-400
+                      h-2
+                      rounded-full
+                    "
+                  style={{
+                    width: `${pronunciationResult.accuracy_score}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Fluency */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-zinc-300">Fluency</span>
+
+                <span className="text-cyan-400 font-semibold">
+                  {Math.round(pronunciationResult.fluency_score)}
+                </span>
+              </div>
+
+              <div className="w-full bg-zinc-800 rounded-full h-2">
+                <div
+                  className="
+                      bg-yellow-400
+                      h-2
+                      rounded-full
+                    "
+                  style={{
+                    width: `${pronunciationResult.fluency_score}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Completeness */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-zinc-300">Completeness</span>
+
+                <span className="text-cyan-400 font-semibold">
+                  {Math.round(pronunciationResult.completeness_score)}
+                </span>
+              </div>
+
+              <div className="w-full bg-zinc-800 rounded-full h-2">
+                <div
+                  className="
+                      bg-purple-400
+                      h-2
+                      rounded-full
+                    "
+                  style={{
+                    width: `${pronunciationResult.completeness_score}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Input */}
       <div
@@ -442,20 +706,20 @@ Tell me something about yourself.
         "
       >
         <div className="flex items-center gap-4">
-          {/* Mic Button */}
+          {/* Mic */}
           <button
             onClick={startListening}
             className={`
-                    p-4
-                    rounded-2xl
-                    transition-all
+              p-4
+              rounded-2xl
+              transition-all
 
-                    ${
-                      isListening
-                        ? "bg-red-500 animate-pulse"
-                        : "bg-zinc-800 hover:bg-zinc-700"
-                    }
-                  `}
+              ${
+                isListening
+                  ? "bg-red-500 animate-pulse"
+                  : "bg-zinc-800 hover:bg-zinc-700"
+              }
+            `}
           >
             <Mic className={isListening ? "text-white" : "text-zinc-300"} />
           </button>
