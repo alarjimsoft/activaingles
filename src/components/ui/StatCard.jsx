@@ -1,4 +1,10 @@
-export default function StatCard({ title, value, subtitle }) {
+export default function StatCard({
+  title,
+
+  value,
+
+  subtitle,
+}) {
   return (
     <div
       className="
@@ -7,13 +13,60 @@ export default function StatCard({ title, value, subtitle }) {
         border border-zinc-800
         rounded-3xl
         p-6
+
+        min-h-[150px]
+
+        flex
+        flex-col
+        justify-center
+
+        transition
+        hover:border-cyan-500/40
+        hover:shadow-lg
+        hover:shadow-cyan-500/10
       "
     >
-      <p className="text-zinc-400 text-sm">{title}</p>
+      {/* Title */}
+      <p
+        className="
+          text-zinc-300
+          text-xs
+          uppercase
+          tracking-widest
+          font-semibold
+        "
+      >
+        {title}
+      </p>
 
-      <h2 className="text-white text-4xl font-bold mt-3">{value}</h2>
+      {/* Value */}
+      <h2
+        className="
+         text-white
+         text-5xl
+         font-black
+         mt-3
+         tracking-tight
+         leading-none
+        "
+        style={{
+          color: "#22d3ee",
+          opacity: 1,
+        }}
+      >
+        {value}
+      </h2>
 
-      <p className="text-cyan-400 text-sm mt-2">{subtitle}</p>
+      {/* Subtitle */}
+      <p
+        className="
+          text-cyan-300
+          text-sm
+          mt-4
+        "
+      >
+        {subtitle}
+      </p>
     </div>
   );
 }

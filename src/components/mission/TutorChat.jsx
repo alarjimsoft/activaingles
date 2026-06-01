@@ -63,6 +63,8 @@ export default function TutorChat({
 
   const audioChunksRef = useRef([]);
 
+  const [missionCompleted, setMissionCompleted] = useState(false);
+
   /*
     Auto Scroll
   */
@@ -121,6 +123,9 @@ export default function TutorChat({
         );
 
         setProgress(data.progress_percent || 0);
+        if (data.is_completed === "Y") {
+          setMissionCompleted(true);
+        }
 
         console.log("Loaded progress:", data);
       } catch (error) {
@@ -298,6 +303,11 @@ export default function TutorChat({
     }
 
     setIsTyping(true);
+    const totalMessages = messages.length + 1;
+
+    const progressPercent = Math.min(totalMessages * 10, 100);
+
+    const xpEarned = totalMessages * 5;
 
     try {
       const result = await sendChatMessage({
@@ -308,6 +318,8 @@ export default function TutorChat({
         mission,
 
         message: transcript,
+
+        progress_percent: progressPercent,
       });
 
       setCorrection(result.correction);
@@ -332,12 +344,6 @@ export default function TutorChat({
         });
       }
 
-      const totalMessages = messages.length + 1;
-
-      const progressPercent = Math.min(totalMessages * 10, 100);
-
-      const xpEarned = totalMessages * 5;
-
       setProgress(progressPercent);
 
       /*
@@ -350,17 +356,22 @@ export default function TutorChat({
 
         progressPercent,
 
+        isCompleted: progressPercent >= 100,
+
         totalXpEarned: xpEarned,
 
         totalMessages: messages.length + 1,
 
         totalTimeMinutes: 5,
 
-        grammarScore: 85,
+        grammarScore: result.grammar_score ?? 90,
 
-        // pronunciationScore: pronunciationResult?.pronunciation_score || 0,
         pronunciationScore: pronunciationData?.pronunciation_score || 0,
       });
+      if (progressPercent >= 100 && !missionCompleted) {
+        alert("Mission Completed! 🎉");
+        setMissionCompleted(true);
+      }
 
       console.log(tutorMessage);
 
@@ -453,17 +464,21 @@ export default function TutorChat({
 
         progressPercent,
 
+        isCompleted: progressPercent >= 100,
+
         totalXpEarned: xpEarned,
 
         totalMessages: messages.length + 1,
 
         totalTimeMinutes: 5,
 
-        grammarScore: 85,
+        grammarScore: result.grammar_score ?? 90,
 
         pronunciationScore: 0,
-        //pronunciationScore: pronunciationResult?.pronunciation_score || 0,
       });
+      if (progressPercent >= 100) {
+        alert("Mission Completed! 🎉");
+      }
 
       playTutorVoice(tutorMessage.text);
     } catch (error) {

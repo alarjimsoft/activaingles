@@ -22,6 +22,12 @@ def calculate_xp(
     """
     Pronunciation bonus
     """
+    if pronunciation_score >= 70:
+        xp += 5 
+    
+    if pronunciation_score >= 80:
+        xp += 10
+    
     if pronunciation_score >= 90:
         xp += 20
 

@@ -123,9 +123,11 @@ export default function Dashboard() {
             <div
               className="h-full bg-cyan-500 rounded-full"
               style={{
-                width: `${
-                  ((stats?.total_xp || 0) / (stats?.xp_next_level || 100)) * 100
-                }%`,
+                width: `${Math.min(
+                  ((stats?.total_xp || 0) / (stats?.xp_next_level || 100)) *
+                    100,
+                  100,
+                )}%`,
               }}
             ></div>
           </div>
@@ -140,7 +142,7 @@ export default function Dashboard() {
 
       {/* Stats */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{
@@ -161,6 +163,18 @@ export default function Dashboard() {
         />
 
         <StatCard title="Current Streak" value="7 Days" subtitle="Keep going" />
+
+        <StatCard
+          title="Pronunciation"
+          value={`${stats?.avg_pronunciation || 0}%`}
+          subtitle="Speaking performance"
+        />
+
+        <StatCard
+          title="Grammar"
+          value={`${stats?.avg_grammar || 0}%`}
+          subtitle="Grammar accuracy"
+        />
       </motion.div>
 
       {/* Progress */}
