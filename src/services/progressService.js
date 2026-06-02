@@ -38,27 +38,27 @@ export async function updateProgress({
 
   pronunciationScore,
 }) {
-  const response = await axios.post(
-    `${API}/update`,
+  const payload = {
+    id_inscripcion: idInscripcion,
 
-    {
-      id_inscripcion: idInscripcion,
+    mission_id: missionId,
 
-      mission_id: missionId,
+    progress_percent: progressPercent,
 
-      progress_percent: progressPercent,
+    total_xp_earned: totalXpEarned,
 
-      total_xp_earned: totalXpEarned,
+    total_messages: totalMessages,
 
-      total_messages: totalMessages,
+    total_time_minutes: totalTimeMinutes,
 
-      total_time_minutes: totalTimeMinutes,
+    grammar_score: grammarScore,
+  };
 
-      grammar_score: grammarScore,
+  if (pronunciationScore != null) {
+    payload.pronunciation_score = pronunciationScore;
+  }
 
-      pronunciation_score: pronunciationScore,
-    },
-  );
+  const response = await axios.post(`${API}/update`, payload);
 
   return response.data;
 }

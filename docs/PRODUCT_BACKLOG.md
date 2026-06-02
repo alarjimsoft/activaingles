@@ -70,7 +70,7 @@ Las instituciones que contrataron la plataforma reciben datos de calidad. El Das
 
 ---
 
-## MVP-02 — Corrección del Pronunciation Score en mensajes de texto
+## ✅ MVP-02 — Corrección del Pronunciation Score en mensajes de texto — COMPLETADO 2026-06-01
 
 ### Descripción
 En `TutorChat.jsx:477`, la línea que pasa el score real de pronunciación está comentada:
@@ -112,7 +112,7 @@ El indicador de pronunciación en el Dashboard tiene significado real. Es una de
 
 ---
 
-## MVP-03 — Eliminación del speech_router duplicado en FastAPI
+## ✅ MVP-03 — Eliminación del speech_router duplicado en FastAPI — COMPLETADO 2026-06-01
 
 ### Descripción
 `backend/app/main.py` importa el router de speech dos veces (líneas 8 y 11) y lo registra dos veces (líneas 25 y 28):
@@ -150,7 +150,7 @@ Ninguno. Cambio de 2 líneas con impacto completamente aislado.
 
 ---
 
-## MVP-04 — Cierre del stream de micrófono y liberación de blob URLs de audio
+## ✅ MVP-04 — Cierre del stream de micrófono y liberación de blob URLs de audio — COMPLETADO 2026-06-01
 
 ### Descripción
 Dos memory leaks activos en `TutorChat.jsx`:

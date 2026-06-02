@@ -314,7 +314,7 @@ END;'
         ) / 200
     ) + 1 AS "LEVEL",
 
-    -- CORREGIDO: Se quitaron los paréntesis exteriores innecesarios
+    -- CORREGIDO: Se quitaron los parï¿½ntesis exteriores innecesarios
     (
         FLOOR(
             NVL(
@@ -410,13 +410,14 @@ WHERE ID_INSCRIPCION =
             :grammar_score,
 
         PRONUNCIATION_SCORE =
-        ROUND(
-        (
-            NVL(PRONUNCIATION_SCORE, 0)
-            + :pronunciation_score
-        ) / 2,
-        1
-        ),
+            CASE
+                WHEN :pronunciation_score IS NOT NULL
+                THEN ROUND(
+                    (NVL(PRONUNCIATION_SCORE, 0) + :pronunciation_score) / 2,
+                    1
+                )
+                ELSE PRONUNCIATION_SCORE
+            END,
 
         /*
         Mission completion

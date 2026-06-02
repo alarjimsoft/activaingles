@@ -190,6 +190,8 @@ export default function TutorChat({
       };
 
       mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+
         const audioBlob = new Blob(
           audioChunksRef.current,
 
@@ -269,6 +271,8 @@ export default function TutorChat({
       const audioUrl = URL.createObjectURL(audioBlob);
 
       const audio = new Audio(audioUrl);
+
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
 
       audio.play();
     } catch (error) {
@@ -366,7 +370,7 @@ export default function TutorChat({
 
         grammarScore: result.grammar_score ?? 90,
 
-        pronunciationScore: pronunciationData?.pronunciation_score || 0,
+        pronunciationScore: pronunciationData?.pronunciation_score || undefined,
       });
       if (progressPercent >= 100 && !missionCompleted) {
         alert("Mission Completed! 🎉");
@@ -411,6 +415,12 @@ export default function TutorChat({
 
     setInput("");
 
+    const totalMessages = messages.length + 1;
+
+    const progressPercent = Math.min(totalMessages * 10, 100);
+
+    const xpEarned = totalMessages * 5;
+
     setIsTyping(true);
 
     try {
@@ -422,6 +432,8 @@ export default function TutorChat({
         mission,
 
         message: input,
+
+        progress_percent: progressPercent,
       });
 
       setCorrection(result.correction);
@@ -446,12 +458,6 @@ export default function TutorChat({
         });
       }
 
-      const totalMessages = messages.length + 1;
-
-      const progressPercent = Math.min(totalMessages * 10, 100);
-
-      const xpEarned = totalMessages * 5;
-
       setProgress(progressPercent);
 
       /*
@@ -473,8 +479,6 @@ export default function TutorChat({
         totalTimeMinutes: 5,
 
         grammarScore: result.grammar_score ?? 90,
-
-        pronunciationScore: 0,
       });
       if (progressPercent >= 100) {
         alert("Mission Completed! 🎉");
