@@ -5,7 +5,7 @@
 > **Fecha:** 2026-06-01
 > **Fuentes:** PROJECT_VISION.md · PROJECT_CONTEXT.md · ARCHITECTURE.md · DATABASE_MAP.md · BUSINESS_RULES.md · GAP_ANALYSIS.md · TECHNICAL_DEBT.md · CLAUDE.md · análisis completo de backend-oracle/
 > **Estado del proyecto al generar este documento:** ~44% de la visión total · ~72% de Fase 1
-> **Última actualización:** 2026-06-01 — MVP-01 COMPLETADO
+> **Última actualización:** 2026-06-02 — MVP-05 COMPLETADO (MVP-01, MVP-02, MVP-03, MVP-04, MVP-05 completados)
 
 ---
 
@@ -196,24 +196,35 @@ Ninguno. Cambios aditivos que no modifican la lógica existente.
 
 ---
 
-## MVP-05 — Medición real del tiempo de estudio
+## ✅ MVP-05 — Medición real del tiempo de estudio — COMPLETADO 2026-06-02
 
 ### Descripción
-`TutorChat.jsx:365` y `:473` envían `totalTimeMinutes: 5` en cada llamada a `updateProgress`, sin importar cuánto tiempo haya pasado realmente. Un estudiante que envía 8 mensajes aparece con 40 minutos de estudio, aunque haya tardado 4 minutos.
+`TutorChat.jsx` enviaba `totalTimeMinutes: 5` hardcodeado en cada llamada a `updateProgress` (flujo de texto y flujo de voz), sin importar cuánto tiempo real hubiera transcurrido.
 
-**Solución:**
+**Solución implementada (Opción B — acumulativa entre sesiones + cap 180 min):**
 ```javascript
-const sessionStartRef = useRef(Date.now());
-// Al enviar cada mensaje:
-const elapsed = Math.round((Date.now() - sessionStartRef.current) / 60000);
-const totalTimeMinutes = Math.max(1, elapsed);
+// Refs declarados en el componente
+const sessionStartRef = useRef(null);  // inicializado en useEffect([])
+const previousTimeRef = useRef(0);     // cargado desde Oracle en loadProgress
+
+// useEffect de inicialización (evita llamada impura en render)
+useEffect(() => { sessionStartRef.current = Date.now(); }, []);
+
+// loadProgress: guarda el tiempo previo acumulado
+previousTimeRef.current = data.total_time_minutes || 0;
+
+// En ambas funciones de envío
+const sessionElapsedMinutes = Math.round(
+  (Date.now() - (sessionStartRef.current || Date.now())) / 60000,
+);
+totalTimeMinutes: previousTimeRef.current + Math.min(180, Math.max(1, sessionElapsedMinutes)),
 ```
 
 ### Problema que resuelve
-`USER_PROGRESS.TOTAL_TIME_MINUTES` y el "Study Time" del Dashboard son estadísticamente inválidos. Viola la Regla #4 de PROJECT_VISION.md (el progreso debe ser medible).
+`USER_PROGRESS.TOTAL_TIME_MINUTES` y el "Study Time" del Dashboard eran estadísticamente inválidos. Viola la Regla #4 de PROJECT_VISION.md (el progreso debe ser medible).
 
 ### Valor para el usuario
-El tiempo de estudio en el Dashboard refleja el tiempo real invertido. Las estadísticas tienen credibilidad.
+El tiempo de estudio en el Dashboard refleja el tiempo real invertido, acumulado entre sesiones. Las estadísticas tienen credibilidad.
 
 ### Valor para el negocio
 Las instituciones pueden reportar horas de práctica reales a sus estudiantes y organismos académicos.
@@ -229,11 +240,13 @@ Las instituciones pueden reportar horas de práctica reales a sus estudiantes y 
 | **Tablas afectadas** | `USER_PROGRESS.TOTAL_TIME_MINUTES` |
 | **Endpoints ORDS** | `POST /progress/update` |
 
-### Riesgos
-El tiempo se reinicia si el usuario recarga la página durante la misión. Comportamiento aceptable para la primera iteración.
+### Decisiones de implementación
+- **Opción B** seleccionada: acumula tiempo previo de Oracle + tiempo de sesión actual.
+- **Cap de 180 minutos** por sesión para evitar outliers por app abierta en segundo plano.
+- `sessionStartRef` inicializado en `useEffect([])` en lugar de `useRef(Date.now())` para satisfacer la regla del React Compiler que prohíbe funciones impuras en el render.
 
 ### Estimación
-**Pequeña** (30 minutos)
+**Pequeña** (completado en ~45 minutos)
 
 ---
 

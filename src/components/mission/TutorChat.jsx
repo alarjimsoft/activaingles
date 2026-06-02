@@ -63,7 +63,18 @@ export default function TutorChat({
 
   const audioChunksRef = useRef([]);
 
+  const sessionStartRef = useRef(null);
+
+  const previousTimeRef = useRef(0);
+
   const [missionCompleted, setMissionCompleted] = useState(false);
+
+  /*
+    Session timer — initialized once on mount to avoid impure call in render
+  */
+  useEffect(() => {
+    sessionStartRef.current = Date.now();
+  }, []);
 
   /*
     Auto Scroll
@@ -126,6 +137,8 @@ export default function TutorChat({
         if (data.is_completed === "Y") {
           setMissionCompleted(true);
         }
+
+        previousTimeRef.current = data.total_time_minutes || 0;
 
         console.log("Loaded progress:", data);
       } catch (error) {
@@ -353,6 +366,10 @@ export default function TutorChat({
       /*
         UPDATE PROGRESS
       */
+      const sessionElapsedMinutes = Math.round(
+        (Date.now() - (sessionStartRef.current || Date.now())) / 60000,
+      );
+
       await updateProgress({
         idInscripcion: inscripcion.idInscripcion,
 
@@ -366,7 +383,9 @@ export default function TutorChat({
 
         totalMessages: messages.length + 1,
 
-        totalTimeMinutes: 5,
+        totalTimeMinutes:
+          previousTimeRef.current +
+          Math.min(180, Math.max(1, sessionElapsedMinutes)),
 
         grammarScore: result.grammar_score ?? 90,
 
@@ -463,6 +482,10 @@ export default function TutorChat({
       /*
         UPDATE PROGRESS
       */
+      const sessionElapsedMinutes = Math.round(
+        (Date.now() - (sessionStartRef.current || Date.now())) / 60000,
+      );
+
       await updateProgress({
         idInscripcion: inscripcion.idInscripcion,
 
@@ -476,7 +499,9 @@ export default function TutorChat({
 
         totalMessages: messages.length + 1,
 
-        totalTimeMinutes: 5,
+        totalTimeMinutes:
+          previousTimeRef.current +
+          Math.min(180, Math.max(1, sessionElapsedMinutes)),
 
         grammarScore: result.grammar_score ?? 90,
       });
