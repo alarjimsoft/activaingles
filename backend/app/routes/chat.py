@@ -2,6 +2,8 @@ from fastapi import APIRouter
 
 from pydantic import BaseModel
 
+from typing import Any
+
 from app.services.openai_service import (
     get_tutor_response
 )
@@ -29,6 +31,8 @@ class ChatRequest(BaseModel):
 
     progress_percent: int
 
+    history: list[dict[str, Any]] = []
+
 
 @router.post("/message")
 async def chat_message(
@@ -42,7 +46,9 @@ async def chat_message(
 
         request.mission,
 
-        request.message
+        request.message,
+
+        request.history
     )
 
     """

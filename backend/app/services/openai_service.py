@@ -16,8 +16,12 @@ client = OpenAI(
 
 def get_tutor_response(
     mission,
-    user_message
+    user_message,
+    history=None
 ):
+    if history is None:
+        history = []
+
     objectives = mission.get(
         "objectives",
         [
@@ -80,6 +84,14 @@ If there are no mistakes:
 }}
 """
 
+    messages = [{"role": "system", "content": system_prompt}]
+
+    for msg in history[-10:]:
+        role = "user" if msg["sender"] == "student" else "assistant"
+        messages.append({"role": role, "content": msg["text"]})
+
+    messages.append({"role": "user", "content": user_message})
+
     response = client.chat.completions.create(
 
         model="gpt-4.1-mini",
@@ -88,18 +100,7 @@ If there are no mistakes:
            "type": "json_object"
         },
 
-        messages=[
-
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-
-            {
-                "role": "user",
-                "content": user_message
-            }
-        ],
+        messages=messages,
 
         temperature=0.7
     )

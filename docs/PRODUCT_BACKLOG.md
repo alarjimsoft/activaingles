@@ -5,7 +5,7 @@
 > **Fecha:** 2026-06-01
 > **Fuentes:** PROJECT_VISION.md · PROJECT_CONTEXT.md · ARCHITECTURE.md · DATABASE_MAP.md · BUSINESS_RULES.md · GAP_ANALYSIS.md · TECHNICAL_DEBT.md · CLAUDE.md · análisis completo de backend-oracle/
 > **Estado del proyecto al generar este documento:** ~44% de la visión total · ~72% de Fase 1
-> **Última actualización:** 2026-06-02 — MVP-05 COMPLETADO (MVP-01, MVP-02, MVP-03, MVP-04, MVP-05 completados)
+> **Última actualización:** 2026-06-02 — MVP-06 COMPLETADO (MVP-01 al MVP-06 completados)
 
 ---
 
@@ -250,53 +250,54 @@ Las instituciones pueden reportar horas de práctica reales a sus estudiantes y 
 
 ---
 
-## MVP-06 — Historial de conversación enviado al tutor IA
+## ✅ MVP-06 — Historial de conversación enviado al tutor IA — COMPLETADO 2026-06-02
 
 ### Descripción
-`openai_service.py` envía a GPT únicamente `[{ role: system }, { role: user, content: mensaje_actual }]`. El tutor IA no tiene memoria de ningún mensaje anterior de la conversación activa. Cada respuesta se genera completamente sin contexto previo.
+`openai_service.py` enviaba a GPT únicamente `[{ role: system }, { role: user, content: mensaje_actual }]`. El tutor no tenía memoria de ningún mensaje anterior.
 
-**Solución:** El frontend incluye los últimos N mensajes en el payload del chat. FastAPI los convierte al formato de `messages` de OpenAI.
+**Solución implementada — `conversationHistoryRef` independiente del store:**
+
+El historial se gestiona con un `useRef` local en `TutorChat` poblado exclusivamente desde Oracle, evitando la contaminación de `initialConversation`. Esto hace MVP-06 completamente independiente de MVP-07.
 
 ```python
-# ChatRequest actualizado
-history: list[dict] = []  # [{"sender": "student", "text": "..."}, ...]
+# chat.py — ChatRequest (backwards-compatible)
+history: list[dict[str, Any]] = []
 
-# openai_service.py: construir messages con historial
-messages = [{"role": "system", "content": system_prompt}]
-for msg in history[-10:]:  # últimos 10 mensajes
-    role = "user" if msg["sender"] == "student" else "assistant"
-    messages.append({"role": role, "content": msg["text"]})
-messages.append({"role": "user", "content": user_message})
+# openai_service.py — get_tutor_response
+def get_tutor_response(mission, user_message, history=None):
+    if history is None:
+        history = []
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in history[-10:]:
+        role = "user" if msg["sender"] == "student" else "assistant"
+        messages.append({"role": role, "content": msg["text"]})
+    messages.append({"role": "user", "content": user_message})
 ```
 
 ### Problema que resuelve
-El tutor no puede hacer seguimiento pedagógico. No recuerda errores del estudiante, no puede hacer preguntas de seguimiento, no puede decir "como mencionaste antes...". La coherencia conversacional es imposible sin contexto. Es el límite pedagógico más importante del tutor actual.
-
-### Valor para el usuario
-Las conversaciones tienen coherencia y continuidad. El tutor recuerda, hace seguimiento y personaliza la interacción. La experiencia se siente como una conversación real, no como llamadas aisladas a un chatbot.
-
-### Valor para el negocio
-La calidad pedagógica del tutor es el principal argumento de venta del producto. Un tutor sin memoria no puede diferenciarse de un chatbot genérico.
+El tutor ahora tiene contexto de la conversación activa. Puede hacer seguimiento, recordar errores y construir una conversación coherente.
 
 ### Complejidad técnica
-**Media** — Requiere cambio coordinado en el modelo Pydantic de FastAPI, en `openai_service.py`, en `chatService.js` y en `TutorChat.jsx`. El límite de historial debe implementarse correctamente para controlar el costo de tokens.
+**Media** — Cambio coordinado en 3 archivos (TutorChat.jsx, chat.py, openai_service.py).
 
-### Dependencias
+### Dependencias resueltas
 
 | Tipo | Elemento |
 |---|---|
-| **Componentes React** | `TutorChat.jsx` (ambas funciones de envío) |
-| **Servicios Python** | `backend/app/routes/chat.py` (modelo `ChatRequest`) |
-| **Servicios Python** | `backend/app/services/openai_service.py` (construcción del array `messages`) |
-| **Servicios Frontend** | `src/services/chatService.js` (payload del POST) |
-| **Store** | `useAppStore.js` (fuente de los mensajes a enviar) |
+| **Componentes React** | `TutorChat.jsx` — `conversationHistoryRef`, poblado en `loadHistory`, actualizado tras cada respuesta en ambas funciones |
+| **Servicios Python** | `backend/app/routes/chat.py` — `history: list[dict[str, Any]] = []` en `ChatRequest` |
+| **Servicios Python** | `backend/app/services/openai_service.py` — construcción dinámica del array `messages` |
+| **Sin cambios** | `chatService.js`, `useAppStore.js`, Oracle ORDS, Oracle DDL |
 
-### Riesgos
-- Aumenta el costo de tokens de OpenAI proporcionalmente al tamaño del historial. Mantener el límite en 8-10 mensajes.
-- Si el historial del store tiene los mensajes hardcodeados de `initialConversation`, se enviarán mensajes incorrectos a GPT. Depende de MVP-07.
+### Decisiones de implementación
+- **`conversationHistoryRef`** en lugar del store: evita completamente la contaminación de `initialConversation` de misiones 1, 2, 3.
+- **`history=None` + guard `if history is None: history = []`**: evita el antipatrón de mutable default en Python.
+- **Límite `history[-10:]`**: últimos 10 mensajes (5 pares) — balance entre contexto pedagógico y costo de tokens.
+- **Actualización del ref después de recibir respuesta**: el mensaje actual va como `message`, no como historial.
+- **Backwards-compatible**: `default=[]` en Pydantic — el backend acepta peticiones sin el campo `history`.
 
 ### Estimación
-**Pequeña** (4-5 horas)
+**Media** (completado en ~1.5 horas)
 
 ---
 

@@ -67,6 +67,8 @@ export default function TutorChat({
 
   const previousTimeRef = useRef(0);
 
+  const conversationHistoryRef = useRef([]);
+
   const [missionCompleted, setMissionCompleted] = useState(false);
 
   /*
@@ -172,6 +174,11 @@ export default function TutorChat({
             },
           );
         });
+
+        conversationHistoryRef.current = history.map((msg) => ({
+          sender: msg.sender,
+          text: msg.message_text,
+        }));
       } catch (error) {
         console.error(error);
       }
@@ -337,6 +344,8 @@ export default function TutorChat({
         message: transcript,
 
         progress_percent: progressPercent,
+
+        history: conversationHistoryRef.current.slice(-10),
       });
 
       setCorrection(result.correction);
@@ -360,6 +369,11 @@ export default function TutorChat({
           messageText: tutorMessage.text,
         });
       }
+
+      conversationHistoryRef.current.push(
+        { sender: "student", text: transcript },
+        { sender: "tutor", text: result.reply },
+      );
 
       setProgress(progressPercent);
 
@@ -453,6 +467,8 @@ export default function TutorChat({
         message: input,
 
         progress_percent: progressPercent,
+
+        history: conversationHistoryRef.current.slice(-10),
       });
 
       setCorrection(result.correction);
@@ -476,6 +492,11 @@ export default function TutorChat({
           messageText: tutorMessage.text,
         });
       }
+
+      conversationHistoryRef.current.push(
+        { sender: "student", text: input },
+        { sender: "tutor", text: result.reply },
+      );
 
       setProgress(progressPercent);
 
