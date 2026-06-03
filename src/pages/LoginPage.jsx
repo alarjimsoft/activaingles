@@ -28,7 +28,7 @@ export default function LoginPage() {
       const result = await loginStudent(matricula, password);
 
       if (!result.success) {
-        setError(result.message);
+        setError(result.message || "No se pudo completar el inicio de sesión. Intenta de nuevo.");
 
         return;
       }
@@ -38,7 +38,7 @@ export default function LoginPage() {
 
       navigate("/dashboard");
     } catch (err) {
-      setError("Login error");
+      setError("Error de conexión. Verifica tu internet e intenta de nuevo.");
     } finally {
       setLoading(false);
     }

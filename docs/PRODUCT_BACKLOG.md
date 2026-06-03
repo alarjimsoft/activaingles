@@ -5,7 +5,7 @@
 > **Fecha:** 2026-06-01
 > **Fuentes:** PROJECT_VISION.md · PROJECT_CONTEXT.md · ARCHITECTURE.md · DATABASE_MAP.md · BUSINESS_RULES.md · GAP_ANALYSIS.md · TECHNICAL_DEBT.md · CLAUDE.md · análisis completo de backend-oracle/
 > **Estado del proyecto al generar este documento:** ~44% de la visión total · ~72% de Fase 1
-> **Última actualización:** 2026-06-02 — MVP-06 COMPLETADO (MVP-01 al MVP-06 completados)
+> **Última actualización:** 2026-06-03 — MVP-10 COMPLETADO (MVP-01 al MVP-10 completados)
 
 ---
 
@@ -301,86 +301,70 @@ El tutor ahora tiene contexto de la conversación activa. Puede hacer seguimient
 
 ---
 
-## MVP-07 — Eliminación de initialConversation hardcodeada del store
+## ✅ MVP-07 — Eliminación de initialConversation hardcodeada del store — COMPLETADO 2026-06-02
 
 ### Descripción
-`useAppStore.js` contiene mensajes de bienvenida hardcodeados para misiones 1, 2 y 3. Cuando `getHistory()` carga el historial real desde Oracle, esos mensajes ya existen en el store. El resultado son mensajes duplicados o fuera de orden al entrar a esas misiones.
+`useAppStore.js` tenía mensajes de bienvenida hardcodeados para misiones 1, 2 y 3 que provocaban tres bugs simultáneos: mensaje ficticio visible, duplicación de mensajes en cada re-entrada, y colisión de `key` en React (`id: 1` hardcodeado vs `message_id: 1` de Oracle).
 
-**Solución:**
-1. Eliminar `initialConversation` del store.
-2. Al montar `TutorChat`, limpiar las conversaciones de esa misión en el store antes de cargar el historial de Oracle.
-3. Si el historial de Oracle está vacío (nueva misión), generar el mensaje de bienvenida dinámicamente basado en `mission.title`.
+**Solución implementada:**
 
-### Problema que resuelve
-Estado inconsistente entre el store local y Oracle. Los mensajes hardcodeados no tienen `message_id` de Oracle, lo que rompe la clave `key={message.id}` de React y puede causar renders incorrectos. Compromete MVP-06 (historial enviado a GPT).
+1. Eliminado completamente el objeto `initialConversation` (38 líneas).
+2. `conversations: {}` como estado inicial limpio.
+3. Agregada acción `setConversation(missionId, messages)` que REEMPLAZA (en lugar de acumular como `addMessage`).
+4. `loadHistory` en TutorChat usa `setConversation` para reemplazar la conversación en cada carga, eliminando duplicados.
+5. Si Oracle devuelve historial vacío: bienvenida dinámica generada desde `mission.title` y `mission.description`.
+6. Migración Zustand: `version: 1` + `migrate` que limpia `conversations: {}` para usuarios con localStorage versión 0.
 
-### Valor para el usuario
-El historial de conversación es limpio y consistente. Al reanudar una misión, el estudiante ve exactamente lo que conversó con el tutor anteriormente.
+### Decisiones de implementación
+- **`version: 1` en lugar de `version: 2`**: el store nunca tuvo versión explícita, por lo que Zustand lo trataba como versión 0. Ir de 0 → 1 es correcto.
+- **`id: \`welcome-${mission.id}\``** (string) para el mensaje de bienvenida: evita colisión con `message_id` numérico de Oracle.
+- **`conversationHistoryRef` sin cambios**: el welcome dinámico NO entra en el historial de GPT (MVP-06 preservado íntegramente).
+- **`addMessage` intacto**: sigue siendo la acción para mensajes nuevos durante la sesión activa.
 
-### Valor para el negocio
-La persistencia del historial es una promesa del producto. Si el historial está corrompido con mensajes genéricos, la credibilidad del sistema de conversación queda comprometida.
-
-### Complejidad técnica
-**Media** — Eliminar del store es trivial. La complejidad está en manejar correctamente la hidratación del store persistido (Zustand persist) sin romper sesiones activas de usuarios existentes.
-
-### Dependencias
+### Dependencias resueltas
 
 | Tipo | Elemento |
 |---|---|
-| **Store** | `src/store/useAppStore.js` |
-| **Componentes React** | `TutorChat.jsx` (lógica de inicialización) |
+| **Store** | `src/store/useAppStore.js` — 4 cambios |
+| **Componentes React** | `TutorChat.jsx` — import `setConversation`, reescritura de `loadHistory` |
+
+### Estimación
+**Media** (completado en ~45 minutos)
+
+---
+
+## ✅ MVP-08 — Persistencia de correcciones gramaticales en Oracle — COMPLETADO 2026-06-02
+
+### Descripción
+`CONVERSATION_MESSAGES.CORRECTION CLOB` existía en Oracle pero nunca se escribía. Las correcciones de GPT solo vivían en la sesión activa y desaparecían al cerrar.
+
+**Implementación:**
+1. `conversationService.js`: `saveMessage` ahora acepta `correction = null` y lo serializa como `JSON.stringify(correction)` en el payload.
+2. `TutorChat.jsx`: ambas funciones de envío pasan `correction: result.correction` al `saveMessage` del tutor. Los mensajes del estudiante no llevan corrección (default null).
+3. Oracle ORDS `POST /chat/message`: INSERT ampliado con `CORRECTION, :correction`. Redesplegado exitosamente en Oracle ADB.
+4. `backend-oracle/ords/chat.sql`: documentación local actualizada.
+
+### Decisiones de implementación
+- **Serialización JSON string**: `JSON.stringify(correction)` en el frontend antes de enviar. Oracle recibe un escalar string → CLOB sin parsing.
+- **Default null en `saveMessage`**: backwards-compatible — llamadas existentes sin `correction` siguen funcionando.
+- **Solo mensajes del tutor llevan corrección**: mensajes del estudiante siempre `correction = null`.
+- **`GET /chat/history` sin cambios**: ya retornaba el campo `CORRECTION` desde el inicio.
+
+### Dependencias resueltas
+
+| Tipo | Elemento |
+|---|---|
 | **Servicios Frontend** | `src/services/conversationService.js` |
-| **Endpoints ORDS** | `GET /chat/history/:conversation_id` |
-
-### Riesgos
-- Zustand `persist` guarda el estado actual en localStorage. Los usuarios con sesiones activas tendrán los mensajes hardcodeados ya guardados. Requiere incrementar la versión del store (`version: 2`) para que Zustand migre o limpie el estado persisted al actualizar.
+| **Componentes React** | `TutorChat.jsx` (×2 funciones de envío) |
+| **Oracle ORDS** | Handler `POST /chat/message` redesplegado |
+| **Tabla Oracle** | `CONVERSATION_MESSAGES.CORRECTION` ahora recibe datos reales |
 
 ### Estimación
-**Pequeña** (2-3 horas)
+**Media** (completado en ~1 hora incluyendo redeploy Oracle)
 
 ---
 
-## MVP-08 — Persistencia de correcciones gramaticales en Oracle
-
-### Descripción
-`CONVERSATION_MESSAGES.CORRECTION` es un campo `CLOB` que existe específicamente para guardar la corrección gramatical del tutor. Actualmente nunca se llena. GPT devuelve `{ original, corrected, explanation }` pero ese dato solo se muestra en `CorrectionCard` y desaparece cuando el usuario cierra la misión.
-
-**Cambios necesarios:**
-1. `conversationService.js`: incluir `correction` en el payload de `saveMessage`.
-2. Endpoint ORDS `POST /chat/message`: agregar `:correction` al INSERT de `CONVERSATION_MESSAGES`.
-3. `TutorChat.jsx`: pasar `result.correction` serializado como JSON al guardar el mensaje del tutor.
-
-### Problema que resuelve
-Las correcciones de gramática — el dato pedagógico más valioso del tutor IA — no sobreviven a la sesión. Oracle no puede usarlos para analítica de errores frecuentes, ni el estudiante puede consultarlos después. Viola la Regla #3 de PROJECT_VISION.md.
-
-### Valor para el usuario
-El historial de correcciones es consultable en sesiones futuras. Al reanudar una misión, el estudiante puede ver qué errores cometió anteriormente.
-
-### Valor para el negocio
-Habilita analítica de patrones de error por estudiante, grupo y curso — uno de los diferenciadores del Teacher Dashboard de Fase 3.
-
-### Complejidad técnica
-**Media** — Requiere modificar el endpoint ORDS `POST /chat/message` en Oracle ADB, lo que implica acceso y redeploy del módulo.
-
-### Dependencias
-
-| Tipo | Elemento |
-|---|---|
-| **Componentes React** | `TutorChat.jsx` (llamada a `saveMessage` del tutor) |
-| **Servicios Frontend** | `src/services/conversationService.js` (función `saveMessage`) |
-| **Packages Oracle** | Módulo ORDS `chat` (handler `POST /chat/message`) |
-| **Tablas afectadas** | `CONVERSATION_MESSAGES.CORRECTION` (CLOB) |
-
-### Riesgos
-- Los mensajes ya guardados en Oracle tienen `CORRECTION = NULL`. El frontend ya maneja `null` correctamente en `CorrectionCard`. Sin riesgo de regresión.
-- La corrección debe serializarse como JSON string antes de insertarse en el CLOB.
-
-### Estimación
-**Pequeña** (3 horas incluyendo modificación en Oracle)
-
----
-
-## MVP-09 — Streak real desde Oracle en el Dashboard
+## ✅ MVP-09 — Streak real desde Oracle en el Dashboard — COMPLETADO 2026-06-02
 
 ### Descripción
 `Dashboard.jsx` muestra "7 Days" hardcodeado en el `StatCard` de Current Streak. `ESTUDIANTES.STREAK_DAYS` es un campo real en Oracle. Más importante: `PKG_AUTH.LOGIN_ESTUDIANTE` ya devuelve `streakDays` en el objeto `student` de la respuesta de login. El dato ya está disponible en `authStore.student.streakDays` sin ninguna llamada adicional.
@@ -413,7 +397,7 @@ La gamificación efectiva aumenta la retención y el uso diario, métricas clave
 
 ---
 
-## MVP-10 — Manejo de error de período académico vencido en el login
+## ✅ MVP-10 — Manejo de error de período académico vencido en el login — COMPLETADO 2026-06-03
 
 ### Descripción
 `PKG_AUTH.LOGIN_ESTUDIANTE` devuelve `{ success: false, message: "Invalid credentials or inactive enrollment." }` cuando la fecha de `PERIODOS` está vencida. `LoginPage.jsx` muestra el mismo mensaje genérico "Login error" tanto para contraseña incorrecta como para período vencido. El estudiante no puede distinguir la causa ni tomar acción.

@@ -9,52 +9,69 @@ PROCEDURE LOGIN_ESTUDIANTE(
     p_password  IN VARCHAR2)
 IS
 
-    --V_MATRICULA VARCHAR2(40);
-
-    --V_PASSWORD VARCHAR2(512);
-
-    V_COUNT NUMBER;
+    V_COUNT       NUMBER;
+    V_PERIOD_EXP  NUMBER;
 
 BEGIN
 
-    --V_MATRICULA :=
-      --  APEX_APPLICATION.G_X01;
-
-    --V_PASSWORD :=
-       -- APEX_APPLICATION.G_X02;
-
-    -- Validar estudiante + inscripci�n activa
-
+    -- Paso 1: Validar que el estudiante existe con credenciales correctas
     SELECT COUNT(*)
     INTO V_COUNT
     FROM ESTUDIANTES E
-    JOIN INSCRIPCIONES I
-        ON I.MATRICULA = E.MATRICULA
-    JOIN PERIODOS P
-        ON P.ID_PERIODO = I.ID_PERIODO
     WHERE E.MATRICULA = p_matricula
-    AND E.PASSWORD = p_password
-    AND E.ESTADO = 'ACTIVO'
-    AND I.ESTADO = 'ACTIVA'
-    AND SYSDATE BETWEEN
-        P.FECHA_INICIO
-        AND P.FECHA_FIN;
+    AND E.PASSWORD    = p_password
+    AND E.ESTADO      = 'ACTIVO';
 
     IF V_COUNT = 0 THEN
 
         APEX_JSON.OPEN_OBJECT;
-
-        APEX_JSON.WRITE(
-            'success',
-            FALSE
-        );
-
-        APEX_JSON.WRITE(
-            'message',
-            'Invalid credentials or inactive enrollment.'
-        );
-
+        APEX_JSON.WRITE('success',   FALSE);
+        APEX_JSON.WRITE('message',   'Credenciales incorrectas. Verifica tu matrícula y contraseña.');
+        APEX_JSON.WRITE('errorCode', 'INVALID_CREDENTIALS');
         APEX_JSON.CLOSE_OBJECT;
+
+        RETURN;
+
+    END IF;
+
+    -- Paso 2: Validar inscripción activa en período vigente
+    SELECT COUNT(*)
+    INTO V_COUNT
+    FROM INSCRIPCIONES I
+    JOIN PERIODOS P
+        ON P.ID_PERIODO = I.ID_PERIODO
+    WHERE I.MATRICULA = p_matricula
+    AND I.ESTADO      = 'ACTIVA'
+    AND SYSDATE BETWEEN P.FECHA_INICIO AND P.FECHA_FIN;
+
+    IF V_COUNT = 0 THEN
+
+        -- Paso 3: Determinar causa — ¿el período venció?
+        SELECT COUNT(*)
+        INTO V_PERIOD_EXP
+        FROM INSCRIPCIONES I
+        JOIN PERIODOS P
+            ON P.ID_PERIODO = I.ID_PERIODO
+        WHERE I.MATRICULA = p_matricula
+        AND SYSDATE > P.FECHA_FIN;
+
+        IF V_PERIOD_EXP > 0 THEN
+
+            APEX_JSON.OPEN_OBJECT;
+            APEX_JSON.WRITE('success',   FALSE);
+            APEX_JSON.WRITE('message',   'Tu período académico ha vencido. Contacta a tu coordinador para inscribirte al próximo período.');
+            APEX_JSON.WRITE('errorCode', 'PERIOD_EXPIRED');
+            APEX_JSON.CLOSE_OBJECT;
+
+        ELSE
+
+            APEX_JSON.OPEN_OBJECT;
+            APEX_JSON.WRITE('success',   FALSE);
+            APEX_JSON.WRITE('message',   'Tu inscripción no está activa. Contacta a tu institución para más información.');
+            APEX_JSON.WRITE('errorCode', 'INACTIVE_ENROLLMENT');
+            APEX_JSON.CLOSE_OBJECT;
+
+        END IF;
 
         RETURN;
 
@@ -94,9 +111,7 @@ BEGIN
         JOIN PERIODOS P
             ON P.ID_PERIODO = I.ID_PERIODO
 
-        WHERE E.MATRICULA =
-            --V_MATRICULA
-              p_matricula
+        WHERE E.MATRICULA = p_matricula
 
         AND I.ESTADO = 'ACTIVA'
 
