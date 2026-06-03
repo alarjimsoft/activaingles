@@ -26,6 +26,7 @@ import {
   startProgress,
   updateProgress,
   getMissionProgress,
+  completeMission,
 } from "../../services/progressService";
 
 import { exportConversationPdf } from "../../utils/conversationPdf";
@@ -404,7 +405,9 @@ export default function TutorChat({
 
       setProgress(progressPercent);
 
-      if (progressPercent >= 100 && !missionCompleted) {
+      const justCompleted = progressPercent >= 100 && !missionCompleted;
+
+      if (justCompleted) {
         addNotification({
           type: "success",
           title: "Mission Completed!",
@@ -442,6 +445,13 @@ export default function TutorChat({
 
         pronunciationScore: pronunciationData?.pronunciation_score || undefined,
       });
+
+      if (justCompleted) {
+        await completeMission({
+          idInscripcion: inscripcion.idInscripcion,
+          missionId: mission.id,
+        });
+      }
 
       console.log(tutorMessage);
 
@@ -535,7 +545,9 @@ export default function TutorChat({
 
       setProgress(progressPercent);
 
-      if (progressPercent >= 100 && !missionCompleted) {
+      const justCompleted = progressPercent >= 100 && !missionCompleted;
+
+      if (justCompleted) {
         addNotification({
           type: "success",
           title: "Mission Completed!",
@@ -571,6 +583,13 @@ export default function TutorChat({
 
         grammarScore: result.grammar_score ?? 90,
       });
+
+      if (justCompleted) {
+        await completeMission({
+          idInscripcion: inscripcion.idInscripcion,
+          missionId: mission.id,
+        });
+      }
 
       playTutorVoice(tutorMessage.text);
     } catch (error) {
