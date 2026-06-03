@@ -27,6 +27,8 @@ export async function saveMessage({
   sender,
 
   messageText,
+
+  correction = null,
 }) {
   const response = await axios.post(
     `${API}/message`,
@@ -37,6 +39,8 @@ export async function saveMessage({
       sender,
 
       message_text: messageText,
+
+      correction: correction ? JSON.stringify(correction) : null,
     },
   );
 

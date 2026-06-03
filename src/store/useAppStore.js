@@ -1,46 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-const initialConversation = {
-  1: [
-    {
-      id: 1,
-      sender: "tutor",
-      text: `
-Hello 👋
-
-Today we will practice:
-
-Introduce Yourself
-
-Tell me something about yourself.
-      `,
-    },
-  ],
-
-  2: [
-    {
-      id: 1,
-      sender: "tutor",
-      text: `
-Welcome to the Coffee Shop mission ☕
-
-Try ordering a drink in English.
-      `,
-    },
-  ],
-
-  3: [
-    {
-      id: 1,
-      sender: "tutor",
-      text: `
-Let’s talk about your daily routine 📚
-      `,
-    },
-  ],
-};
-
 const useAppStore = create(
   persist(
     (set, get) => ({
@@ -68,7 +28,7 @@ const useAppStore = create(
         }),
 
       // Conversations
-      conversations: initialConversation,
+      conversations: {},
 
       // Get conversation by mission
       getConversation: (missionId) => {
@@ -86,10 +46,29 @@ const useAppStore = create(
             [missionId]: [...(state.conversations[missionId] || []), message],
           },
         })),
+
+      // Replace entire conversation (used by loadHistory to avoid duplicates)
+      setConversation: (missionId, messages) =>
+        set((state) => ({
+          conversations: {
+            ...state.conversations,
+
+            [missionId]: messages,
+          },
+        })),
     }),
 
     {
       name: "activa-ingles-store",
+
+      version: 1,
+
+      migrate: (persistedState, version) => {
+        if (version === 0) {
+          return { ...persistedState, conversations: {} };
+        }
+        return persistedState;
+      },
     },
   ),
 );

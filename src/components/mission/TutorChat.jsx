@@ -32,14 +32,21 @@ import { exportConversationPdf } from "../../utils/conversationPdf";
 
 import { evaluatePronunciation } from "../../services/pronunciationService";
 
+// Stable empty array — prevents new [] reference on every render in Zustand selector
+const EMPTY_MESSAGES = [];
+
 export default function TutorChat({
   mission,
 
   setProgress,
 }) {
-  const messages = useAppStore((state) => state.getConversation(mission.id));
+  const messages = useAppStore(
+    (state) => state.conversations[mission.id] ?? EMPTY_MESSAGES,
+  );
 
   const addMessage = useAppStore((state) => state.addMessage);
+
+  const setConversation = useAppStore((state) => state.setConversation);
 
   const inscripcion = useAuthStore((state) => state.inscripcion);
 
@@ -71,6 +78,11 @@ export default function TutorChat({
 
   const [missionCompleted, setMissionCompleted] = useState(false);
 
+  // Stable primitives — prevent object reference instability in useEffect deps
+  const missionId = mission?.id;
+  const missionTitle = mission?.title;
+  const missionDescription = mission?.description;
+
   /*
     Session timer — initialized once on mount to avoid impure call in render
   */
@@ -96,7 +108,7 @@ export default function TutorChat({
         const result = await startConversation({
           idInscripcion: inscripcion.idInscripcion,
 
-          missionId: mission.id,
+          missionId,
         });
 
         setConversationId(result.conversationId);
@@ -107,7 +119,7 @@ export default function TutorChat({
         await startProgress({
           idInscripcion: inscripcion.idInscripcion,
 
-          missionId: mission.id,
+          missionId,
         });
 
         console.log("Conversation created:", result.conversationId);
@@ -116,10 +128,10 @@ export default function TutorChat({
       }
     }
 
-    if (inscripcion && mission) {
+    if (inscripcion && missionId) {
       initConversation();
     }
-  }, [inscripcion, mission]);
+  }, [inscripcion, missionId]);
 
   /*
     Load progress
@@ -127,12 +139,12 @@ export default function TutorChat({
   useEffect(() => {
     async function loadProgress() {
       try {
-        if (!inscripcion || !mission) return;
+        if (!inscripcion || !missionId) return;
 
         const data = await getMissionProgress(
           inscripcion.idInscripcion,
 
-          mission.id,
+          missionId,
         );
 
         setProgress(data.progress_percent || 0);
@@ -149,7 +161,7 @@ export default function TutorChat({
     }
 
     loadProgress();
-  }, [inscripcion, mission]);
+  }, [inscripcion, missionId, setProgress]);
 
   /*
     Load history
@@ -161,19 +173,24 @@ export default function TutorChat({
       try {
         const history = await getHistory(conversationId);
 
-        history.forEach((msg) => {
-          addMessage(
-            mission.id,
-
+        if (history.length === 0) {
+          setConversation(missionId, [
             {
-              id: msg.message_id,
-
-              sender: msg.sender,
-
-              text: msg.message_text,
+              id: `welcome-${missionId}`,
+              sender: "tutor",
+              text: `Hello! 👋\n\nToday we'll practice: ${missionTitle}\n\n${missionDescription}\n\nLet's get started! 😊`,
             },
+          ]);
+        } else {
+          setConversation(
+            missionId,
+            history.map((msg) => ({
+              id: msg.message_id,
+              sender: msg.sender,
+              text: msg.message_text,
+            })),
           );
-        });
+        }
 
         conversationHistoryRef.current = history.map((msg) => ({
           sender: msg.sender,
@@ -185,7 +202,7 @@ export default function TutorChat({
     }
 
     loadHistory();
-  }, [conversationId, addMessage, mission]);
+  }, [conversationId, setConversation, missionId, missionTitle, missionDescription]);
 
   /*
     Speech recognition
@@ -367,6 +384,8 @@ export default function TutorChat({
           sender: "tutor",
 
           messageText: tutorMessage.text,
+
+          correction: result.correction,
         });
       }
 
@@ -490,6 +509,8 @@ export default function TutorChat({
           sender: "tutor",
 
           messageText: tutorMessage.text,
+
+          correction: result.correction,
         });
       }
 

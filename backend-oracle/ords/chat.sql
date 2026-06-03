@@ -84,6 +84,8 @@ ORDER BY CREATED_AT'
 
         MESSAGE_TEXT,
 
+        CORRECTION,
+
         CREATED_AT
 
     )
@@ -95,6 +97,8 @@ ORDER BY CREATED_AT'
         :sender,
 
         :message_text,
+
+        :correction,
 
         SYSTIMESTAMP
 

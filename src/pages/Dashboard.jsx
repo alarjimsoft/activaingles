@@ -61,7 +61,6 @@ export default function Dashboard() {
         );
 
         setMissions(data);
-        console.log(missions);
       } catch (error) {
         console.error(error);
       }
@@ -162,7 +161,11 @@ export default function Dashboard() {
           subtitle="Excellent consistency"
         />
 
-        <StatCard title="Current Streak" value="7 Days" subtitle="Keep going" />
+        <StatCard
+          title="Current Streak"
+          value={`${student.streakDays ?? 0} Days`}
+          subtitle="Keep going"
+        />
 
         <StatCard
           title="Pronunciation"
