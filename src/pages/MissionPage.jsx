@@ -1,20 +1,53 @@
 import { useParams, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import MainLayout from "../layouts/MainLayout";
 
 import MissionSidebar from "../components/mission/MissionSidebar";
 import TutorChat from "../components/mission/TutorChat";
+import Loader from "../components/ui/Loader";
+
+import useAuthStore from "../store/authStore";
+import { getMissions } from "../services/missionService";
 
 export default function MissionPage() {
-  //useParams();
-
+  const { id } = useParams();
   const location = useLocation();
+  const inscripcion = useAuthStore((state) => state.inscripcion);
 
-  const mission = location.state?.mission;
+  const [mission, setMission] = useState(location.state?.mission ?? null);
+  const [loading, setLoading] = useState(!location.state?.mission);
   const [progress, setProgress] = useState(0);
 
-  console.log("MISSION:", mission);
+  useEffect(() => {
+    if (mission) return;
+    if (!inscripcion) return;
+
+    async function loadMission() {
+      try {
+        const missions = await getMissions(
+          inscripcion.idCurso,
+          inscripcion.idInscripcion,
+        );
+        const found = missions.find((m) => String(m.id) === String(id));
+        if (found) setMission(found);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadMission();
+  }, [id, inscripcion, mission]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <Loader />
+      </MainLayout>
+    );
+  }
 
   if (!mission) {
     return (
