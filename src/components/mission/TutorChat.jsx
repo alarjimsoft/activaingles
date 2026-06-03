@@ -32,6 +32,8 @@ import { exportConversationPdf } from "../../utils/conversationPdf";
 
 import { evaluatePronunciation } from "../../services/pronunciationService";
 
+import useNotificationStore from "../../store/useNotificationStore";
+
 // Stable empty array — prevents new [] reference on every render in Zustand selector
 const EMPTY_MESSAGES = [];
 
@@ -77,6 +79,8 @@ export default function TutorChat({
   const conversationHistoryRef = useRef([]);
 
   const [missionCompleted, setMissionCompleted] = useState(false);
+
+  const addNotification = useNotificationStore((state) => state.addNotification);
 
   // Stable primitives — prevent object reference instability in useEffect deps
   const missionId = mission?.id;
@@ -275,7 +279,11 @@ export default function TutorChat({
         } catch (error) {
           console.error(error);
 
-          alert("Speech recognition failed.");
+          addNotification({
+            type: "error",
+            title: "Voice Recognition Failed",
+            message: "Could not process your audio. Please try again.",
+          });
         }
 
         setIsListening(false);
@@ -396,6 +404,16 @@ export default function TutorChat({
 
       setProgress(progressPercent);
 
+      if (progressPercent >= 100 && !missionCompleted) {
+        addNotification({
+          type: "success",
+          title: "Mission Completed!",
+          message: "Great work! Keep practicing to reinforce your skills.",
+          duration: 6000,
+        });
+        setMissionCompleted(true);
+      }
+
       /*
         UPDATE PROGRESS
       */
@@ -424,10 +442,6 @@ export default function TutorChat({
 
         pronunciationScore: pronunciationData?.pronunciation_score || undefined,
       });
-      if (progressPercent >= 100 && !missionCompleted) {
-        alert("Mission Completed! 🎉");
-        setMissionCompleted(true);
-      }
 
       console.log(tutorMessage);
 
@@ -521,6 +535,16 @@ export default function TutorChat({
 
       setProgress(progressPercent);
 
+      if (progressPercent >= 100 && !missionCompleted) {
+        addNotification({
+          type: "success",
+          title: "Mission Completed!",
+          message: "Great work! Keep practicing to reinforce your skills.",
+          duration: 6000,
+        });
+        setMissionCompleted(true);
+      }
+
       /*
         UPDATE PROGRESS
       */
@@ -547,9 +571,6 @@ export default function TutorChat({
 
         grammarScore: result.grammar_score ?? 90,
       });
-      if (progressPercent >= 100) {
-        alert("Mission Completed! 🎉");
-      }
 
       playTutorVoice(tutorMessage.text);
     } catch (error) {

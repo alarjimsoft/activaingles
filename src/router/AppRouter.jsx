@@ -8,9 +8,12 @@ import Profile from "../pages/Profile";
 import MissionPage from "../pages/MissionPage";
 import { AnimatePresence } from "framer-motion";
 import ProtectedRoute from "../routes/ProtectedRoute";
+import ToastContainer from "../components/ui/ToastContainer";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<LoginPage />} />
