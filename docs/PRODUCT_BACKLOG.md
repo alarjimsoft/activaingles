@@ -5,7 +5,7 @@
 > **Fecha:** 2026-06-01
 > **Fuentes:** PROJECT_VISION.md · PROJECT_CONTEXT.md · ARCHITECTURE.md · DATABASE_MAP.md · BUSINESS_RULES.md · GAP_ANALYSIS.md · TECHNICAL_DEBT.md · CLAUDE.md · análisis completo de backend-oracle/
 > **Estado del proyecto al generar este documento:** ~44% de la visión total · ~72% de Fase 1
-> **Última actualización:** 2026-06-03 — MVP-10 COMPLETADO (MVP-01 al MVP-10 completados)
+> **Última actualización:** 2026-06-03 — MVP-11 COMPLETADO (MVP-01 al MVP-11 completados)
 
 ---
 
@@ -437,7 +437,7 @@ Ninguno. Cambio aditivo puramente cosmético.
 
 ---
 
-## MVP-11 — Revocación de API keys expuestas en PKG_SERVICIOS_IA.sql
+## ✅ MVP-11 — Revocación de API keys expuestas en PKG_SERVICIOS_IA.sql — COMPLETADO 2026-06-03
 
 ### Descripción
 `backend-oracle/PACKAGE_BODIES/PKG_SERVICIOS_IA.sql` contiene en texto plano las mismas API keys de producción que `backend/.env`:
