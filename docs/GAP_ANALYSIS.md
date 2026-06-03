@@ -169,9 +169,9 @@
 | LoginPage | `/` | ✅ Completado | |
 | Dashboard | `/dashboard` | ✅ Completado | |
 | MissionPage | `/missions/:id` | ✅ Completado | |
-| Progress | `/progress` | ❌ Pendiente | Solo título |
+| Progress | `/progress` | ✅ Completado | Analítica pedagógica completa — KPIs globales + progreso por misión agrupado por topic |
 | Library | `/library` | ❌ Pendiente | Solo título |
-| Profile | `/profile` | ❌ Pendiente | Solo título |
+| Profile | `/profile` | ✅ Completado | Avatar + nombre completo + nivel CEFR + XP/nivel + stats + barras de performance |
 
 ---
 

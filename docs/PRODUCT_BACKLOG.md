@@ -484,7 +484,7 @@ Protege los costos operacionales. Una fuga de la OpenAI key puede generar miles 
 
 ---
 
-## ALT-01 — Implementación de la página /progress
+## ✅ ALT-01 — Implementación de la página /progress — COMPLETADO 2026-06-03
 
 ### Descripción
 La página `/progress` existe en el router pero solo renderiza `<h1>Progress</h1>`. Es la página de analítica pedagógica personal del estudiante — una de las más importantes del producto y completamente vacía.
@@ -532,7 +532,7 @@ Las instituciones necesitan evidencia de que el sistema funciona. Una página de
 
 ---
 
-## ALT-02 — Implementación de la página /profile
+## ✅ ALT-02 — Implementación de la página /profile — COMPLETADO 2026-06-03
 
 ### Descripción
 La página `/profile` solo tiene un título. Debe mostrar la información personal del estudiante y sus métricas acumuladas.
