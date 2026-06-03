@@ -88,3 +88,16 @@ export async function getMissionProgress(idInscripcion, missionId) {
 
   return await response.json();
 }
+
+export async function getAllMissionsProgress(idInscripcion, missions) {
+  const practicedMissions = missions.filter((m) => m.status !== "LOCKED");
+  const results = await Promise.all(
+    practicedMissions.map((m) =>
+      getMissionProgress(idInscripcion, m.missionId).catch(() => null),
+    ),
+  );
+  return practicedMissions.reduce((acc, m, i) => {
+    acc[m.missionId] = results[i];
+    return acc;
+  }, {});
+}
