@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from pydantic import BaseModel
 
-from typing import Any
+from typing import Any, Optional
 
 from app.services.openai_service import (
     get_tutor_response
@@ -33,6 +33,8 @@ class ChatRequest(BaseModel):
 
     history: list[dict[str, Any]] = []
 
+    learning_context: Optional[dict] = None
+
 
 @router.post("/message")
 async def chat_message(
@@ -48,7 +50,9 @@ async def chat_message(
 
         request.message,
 
-        request.history
+        request.history,
+
+        request.learning_context
     )
 
     """
@@ -67,6 +71,10 @@ async def chat_message(
     """
     XP SYSTEM
     """
+    practice_score = None
+    if request.learning_context:
+        practice_score = request.learning_context.get("practice_score")
+
     xp_earned = calculate_xp(
 
         grammar_score=grammar_score,
@@ -75,7 +83,9 @@ async def chat_message(
 
         message_count=1,
 
-        completed=request.progress_percent>=100
+        completed=request.progress_percent>=100,
+
+        practice_score=practice_score,
     )
 
     """

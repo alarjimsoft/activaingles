@@ -23,10 +23,8 @@ import {
 import useAuthStore from "../../store/authStore";
 
 import {
-  startProgress,
   updateProgress,
   getMissionProgress,
-  completeMission,
 } from "../../services/progressService";
 
 import { exportConversationPdf } from "../../utils/conversationPdf";
@@ -40,9 +38,18 @@ const EMPTY_MESSAGES = [];
 
 export default function TutorChat({
   mission,
-
   setProgress,
+  missionContent  = null,
+  practiceScore   = null,
+  baseProgress    = 0,
+  onComplete      = null,
 }) {
+  const learningContext = missionContent ? {
+    vocabulary:    missionContent.vocabulary ?? [],
+    grammar:       missionContent.grammar    ?? null,
+    examples:      missionContent.examples   ?? [],
+    practice_score: practiceScore,
+  } : null;
   const messages = useAppStore(
     (state) => state.conversations[mission.id] ?? EMPTY_MESSAGES,
   );
@@ -79,7 +86,7 @@ export default function TutorChat({
 
   const conversationHistoryRef = useRef([]);
 
-  const [missionCompleted, setMissionCompleted] = useState(false);
+  const [conversationComplete, setConversationComplete] = useState(false);
 
   const addNotification = useNotificationStore((state) => state.addNotification);
 
@@ -118,15 +125,6 @@ export default function TutorChat({
 
         setConversationId(result.conversationId);
 
-        /*
-          START PROGRESS
-        */
-        await startProgress({
-          idInscripcion: inscripcion.idInscripcion,
-
-          missionId,
-        });
-
         console.log("Conversation created:", result.conversationId);
       } catch (error) {
         console.error(error);
@@ -153,9 +151,6 @@ export default function TutorChat({
         );
 
         setProgress(data.progress_percent || 0);
-        if (data.is_completed === "Y") {
-          setMissionCompleted(true);
-        }
 
         previousTimeRef.current = data.total_time_minutes || 0;
 
@@ -354,8 +349,8 @@ export default function TutorChat({
 
     setIsTyping(true);
     const totalMessages = messages.length + 1;
-
-    const progressPercent = Math.min(totalMessages * 10, 100);
+    const conversationCap = baseProgress + 40;
+    const progressPercent = Math.min(baseProgress + totalMessages * 8, conversationCap);
 
     const xpEarned = totalMessages * 5;
 
@@ -372,6 +367,8 @@ export default function TutorChat({
         progress_percent: progressPercent,
 
         history: conversationHistoryRef.current.slice(-10),
+
+        learning_context: learningContext,
       });
 
       setCorrection(result.correction);
@@ -405,16 +402,15 @@ export default function TutorChat({
 
       setProgress(progressPercent);
 
-      const justCompleted = progressPercent >= 100 && !missionCompleted;
-
-      if (justCompleted) {
+      const justConversationComplete = progressPercent >= conversationCap && !conversationComplete;
+      if (justConversationComplete) {
+        setConversationComplete(true);
         addNotification({
           type: "success",
-          title: "Mission Completed!",
-          message: "Great work! Keep practicing to reinforce your skills.",
+          title: "¡Conversación completada!",
+          message: "Ahora evalúa tu pronunciación para terminar la misión.",
           duration: 6000,
         });
-        setMissionCompleted(true);
       }
 
       /*
@@ -431,7 +427,7 @@ export default function TutorChat({
 
         progressPercent,
 
-        isCompleted: progressPercent >= 100,
+        isCompleted: false,
 
         totalXpEarned: xpEarned,
 
@@ -445,13 +441,6 @@ export default function TutorChat({
 
         pronunciationScore: pronunciationData?.pronunciation_score || undefined,
       });
-
-      if (justCompleted) {
-        await completeMission({
-          idInscripcion: inscripcion.idInscripcion,
-          missionId: mission.id,
-        });
-      }
 
       console.log(tutorMessage);
 
@@ -492,8 +481,8 @@ export default function TutorChat({
     setInput("");
 
     const totalMessages = messages.length + 1;
-
-    const progressPercent = Math.min(totalMessages * 10, 100);
+    const conversationCap = baseProgress + 40;
+    const progressPercent = Math.min(baseProgress + totalMessages * 8, conversationCap);
 
     const xpEarned = totalMessages * 5;
 
@@ -512,6 +501,8 @@ export default function TutorChat({
         progress_percent: progressPercent,
 
         history: conversationHistoryRef.current.slice(-10),
+
+        learning_context: learningContext,
       });
 
       setCorrection(result.correction);
@@ -545,16 +536,15 @@ export default function TutorChat({
 
       setProgress(progressPercent);
 
-      const justCompleted = progressPercent >= 100 && !missionCompleted;
-
-      if (justCompleted) {
+      const justConversationComplete = progressPercent >= conversationCap && !conversationComplete;
+      if (justConversationComplete) {
+        setConversationComplete(true);
         addNotification({
           type: "success",
-          title: "Mission Completed!",
-          message: "Great work! Keep practicing to reinforce your skills.",
+          title: "¡Conversación completada!",
+          message: "Ahora evalúa tu pronunciación para terminar la misión.",
           duration: 6000,
         });
-        setMissionCompleted(true);
       }
 
       /*
@@ -571,7 +561,7 @@ export default function TutorChat({
 
         progressPercent,
 
-        isCompleted: progressPercent >= 100,
+        isCompleted: false,
 
         totalXpEarned: xpEarned,
 
@@ -583,13 +573,6 @@ export default function TutorChat({
 
         grammarScore: result.grammar_score ?? 90,
       });
-
-      if (justCompleted) {
-        await completeMission({
-          idInscripcion: inscripcion.idInscripcion,
-          missionId: mission.id,
-        });
-      }
 
       playTutorVoice(tutorMessage.text);
     } catch (error) {
@@ -625,7 +608,11 @@ export default function TutorChat({
           <div className="flex-1">
             <h2 className="text-white text-xl font-bold">AI Tutor</h2>
 
-            <p className="text-zinc-400 text-sm mb-4">Mission active</p>
+            <p className="text-zinc-400 text-sm mb-4">
+              {missionContent?.grammar?.title
+                ? `Today's focus: ${missionContent.grammar.title}`
+                : "Mission active"}
+            </p>
 
             <button
               onClick={() =>
@@ -823,6 +810,18 @@ export default function TutorChat({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Conversation complete — advance to assessment */}
+      {conversationComplete && onComplete && (
+        <div className="px-5 pb-2">
+          <button
+            onClick={onComplete}
+            className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-3 rounded-2xl transition-colors"
+          >
+            Ir a Pronunciación →
+          </button>
         </div>
       )}
 

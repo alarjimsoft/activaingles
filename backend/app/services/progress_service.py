@@ -3,7 +3,8 @@ def calculate_xp(
     grammar_score=0,
     pronunciation_score=0,
     message_count=1,
-    completed=False
+    completed=False,
+    practice_score=None,
 ):
 
     xp = 0
@@ -23,13 +24,24 @@ def calculate_xp(
     Pronunciation bonus
     """
     if pronunciation_score >= 70:
-        xp += 5 
-    
+        xp += 5
+
     if pronunciation_score >= 80:
         xp += 10
-    
+
     if pronunciation_score >= 90:
         xp += 20
+
+    """
+    Practice score bonus
+    """
+    if practice_score is not None:
+        if practice_score >= 95:
+            xp += 50
+        elif practice_score >= 80:
+            xp += 30
+        elif practice_score >= 60:
+            xp += 15
 
     """
     Mission completed

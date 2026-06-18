@@ -17,7 +17,8 @@ client = OpenAI(
 def get_tutor_response(
     mission,
     user_message,
-    history=None
+    history=None,
+    learning_context=None
 ):
     if history is None:
         history = []
@@ -30,6 +31,26 @@ def get_tutor_response(
             "Answer naturally"
         ]
     )
+
+    learning_section = ""
+    if learning_context:
+        vocab_terms = [w.get("term", "") for w in learning_context.get("vocabulary", [])]
+        grammar     = learning_context.get("grammar") or {}
+        score       = learning_context.get("practice_score")
+
+        learning_section = "\n\nLEARNING CONTEXT (student already studied this):\n"
+        if vocab_terms:
+            learning_section += f"Vocabulary: {', '.join(vocab_terms)}\n"
+        if grammar.get("title"):
+            learning_section += f"Grammar focus: {grammar['title']} — {grammar.get('rule', '')}\n"
+        if score is not None:
+            if score >= 75:
+                learning_section += f"Practice score: {score}% — Strong. Challenge them with complex sentences.\n"
+            elif score >= 50:
+                learning_section += f"Practice score: {score}% — Average. Guide correct grammar use.\n"
+            else:
+                learning_section += f"Practice score: {score}% — Needs help. Be encouraging, give extra guidance.\n"
+        learning_section += "Guide the student to naturally use these words and grammar in conversation.\n"
 
     system_prompt = f"""
 You are an English tutor
@@ -44,7 +65,7 @@ Mission description:
 
 Objectives:
 {", ".join(objectives)}
-
+{learning_section}
 Your goals:
 
 - Help the student practice English

@@ -38,25 +38,14 @@ export async function updateProgress({
 
   pronunciationScore,
 }) {
-  const payload = {
-    id_inscripcion: idInscripcion,
+  const payload = { id_inscripcion: idInscripcion, mission_id: missionId };
 
-    mission_id: missionId,
-
-    progress_percent: progressPercent,
-
-    total_xp_earned: totalXpEarned,
-
-    total_messages: totalMessages,
-
-    total_time_minutes: totalTimeMinutes,
-
-    grammar_score: grammarScore,
-  };
-
-  if (pronunciationScore != null) {
-    payload.pronunciation_score = pronunciationScore;
-  }
+  if (progressPercent  !== undefined) payload.progress_percent    = progressPercent;
+  if (totalXpEarned    !== undefined) payload.total_xp_earned     = totalXpEarned;
+  if (totalMessages    !== undefined) payload.total_messages       = totalMessages;
+  if (totalTimeMinutes !== undefined) payload.total_time_minutes   = totalTimeMinutes;
+  if (grammarScore     !== undefined) payload.grammar_score        = grammarScore;
+  if (pronunciationScore != null)     payload.pronunciation_score  = pronunciationScore;
 
   const response = await axios.post(`${API}/update`, payload);
 
@@ -100,4 +89,38 @@ export async function getAllMissionsProgress(idInscripcion, missions) {
     acc[m.missionId] = results[i];
     return acc;
   }, {});
+}
+
+export async function getPhaseStatus(idInscripcion, missionId) {
+  try {
+    const response = await fetch(`${API}/phase/${idInscripcion}/${missionId}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.items?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function updatePhase({
+  idInscripcion,
+  missionId,
+  currentPhase,
+  learningCompleted,
+  practiceCompleted,
+  practiceScore,
+  assessmentCompleted,
+}) {
+  const payload = {
+    id_inscripcion: idInscripcion,
+    mission_id: missionId,
+    current_phase: currentPhase,
+  };
+  if (learningCompleted !== undefined) payload.learning_completed = learningCompleted;
+  if (practiceCompleted !== undefined) payload.practice_completed = practiceCompleted;
+  if (practiceScore !== undefined) payload.practice_score = practiceScore;
+  if (assessmentCompleted !== undefined) payload.assessment_completed = assessmentCompleted;
+
+  const response = await axios.post(`${API}/phase`, payload);
+  return response.data;
 }

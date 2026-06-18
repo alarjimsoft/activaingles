@@ -174,9 +174,9 @@ export default function Dashboard() {
         />
 
         <StatCard
-          title="Grammar"
-          value={`${stats?.avg_grammar || 0}%`}
-          subtitle="Grammar accuracy"
+          title="Avg Practice Score"
+          value={`${stats?.avg_practice_score || 0}%`}
+          subtitle="Practice performance"
         />
       </motion.div>
 
