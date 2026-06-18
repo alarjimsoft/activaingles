@@ -14,7 +14,7 @@ import MainLayout from "../layouts/MainLayout";
 import MissionProgressRow from "../components/progress/MissionProgressRow";
 
 import useAuthStore from "../store/authStore";
-import { getDashboardStats } from "../services/dashboardService";
+import useStatsStore from "../store/useStatsStore";
 import { getMissions } from "../services/missionService";
 import { getAllMissionsProgress } from "../services/progressService";
 
@@ -73,9 +73,11 @@ export default function Progress() {
   const student = useAuthStore((state) => state.student);
   const inscripcion = useAuthStore((state) => state.inscripcion);
 
+  const stats      = useStatsStore((state) => state.stats);
+  const fetchStats = useStatsStore((state) => state.fetchStats);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState(null);
   const [missions, setMissions] = useState([]);
   const [missionProgressMap, setMissionProgressMap] = useState({});
 
@@ -85,11 +87,10 @@ export default function Progress() {
       setError(null);
       try {
         // Fase 1: stats globales + lista de misiones en paralelo
-        const [statsData, missionsData] = await Promise.all([
-          getDashboardStats(inscripcion.idInscripcion),
+        const [, missionsData] = await Promise.all([
+          fetchStats(inscripcion.idInscripcion),
           getMissions(inscripcion.idCurso, inscripcion.idInscripcion),
         ]);
-        setStats(statsData);
         setMissions(missionsData);
 
         // Fase 2: progreso por misión (N llamadas paralelas, solo no-LOCKED)
@@ -106,7 +107,7 @@ export default function Progress() {
     }
 
     if (inscripcion) load();
-  }, [inscripcion]);
+  }, [inscripcion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Agrupa misiones por topic (mismo patrón que Dashboard)
   const groupedMissions = missions.reduce((acc, mission) => {
@@ -207,7 +208,7 @@ export default function Progress() {
         <StatItem
           icon={Flame}
           label="Current Streak"
-          value={`${student.streakDays ?? 0} days`}
+          value={`${stats?.current_streak ?? 0} days`}
         />
         <GlobalScoreBar
           icon={BookOpen}

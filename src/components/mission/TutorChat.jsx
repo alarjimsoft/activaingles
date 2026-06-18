@@ -77,6 +77,7 @@ export default function TutorChat({
   const messagesEndRef = useRef(null);
 
   const mediaRecorderRef = useRef(null);
+  const activeStreamRef  = useRef(null);
 
   const audioChunksRef = useRef([]);
 
@@ -204,6 +205,13 @@ export default function TutorChat({
     loadHistory();
   }, [conversationId, setConversation, missionId, missionTitle, missionDescription]);
 
+  // Cierra el stream de micrófono si el componente se desmonta durante una grabación
+  useEffect(() => {
+    return () => {
+      activeStreamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
   /*
     Speech recognition
   */
@@ -213,6 +221,8 @@ export default function TutorChat({
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
+
+      activeStreamRef.current = stream;
 
       const mediaRecorder = new MediaRecorder(stream);
 
@@ -228,6 +238,7 @@ export default function TutorChat({
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
+        activeStreamRef.current = null;
 
         const audioBlob = new Blob(
           audioChunksRef.current,
@@ -256,8 +267,6 @@ export default function TutorChat({
 
             transcript,
           );
-
-          console.log(pronunciationData);
 
           setPronunciationResult(pronunciationData);
 

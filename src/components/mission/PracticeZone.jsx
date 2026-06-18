@@ -69,12 +69,15 @@ export default function PracticeZone({
     // Persistir en Oracle (fire and forget)
     if (inscripcion) {
       saveActivityResult({
-        idInscripcion: inscripcion.idInscripcion,
+        idInscripcion:  inscripcion.idInscripcion,
         missionId,
-        activityType:  activity.type,
-        score:         result.score,
-        studentAnswer: answer,
-        correctAnswer: activity.correct_answer,
+        activityType:   activity.type,
+        activityPrompt: activity.prompt,
+        score:          result.score,
+        studentAnswer:  answer,
+        correctAnswer:  activity.correct_answer,
+        isCorrect:      result.is_correct,
+        aiExplanation:  result.explanation ?? null,
       });
     }
   }

@@ -12,11 +12,11 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 import { motion } from "framer-motion";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import useAuthStore from "../../store/authStore";
 
-import { getDashboardStats } from "../../services/dashboardService";
+import useStatsStore from "../../store/useStatsStore";
 
 const studentMenuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -38,26 +38,16 @@ export default function Sidebar() {
   const academico = useAuthStore((state) => state.academico);
   const userType = useAuthStore((state) => state.userType);
 
-  const [stats, setStats] = useState(null);
+  const stats      = useStatsStore((state) => state.stats);
+  const fetchStats = useStatsStore((state) => state.fetchStats);
 
   const isAcademico = userType === "academico";
   const menuItems = isAcademico ? academicoMenuItems : studentMenuItems;
 
   useEffect(() => {
-    if (isAcademico) return;
-
-    async function loadStats() {
-      try {
-        if (!inscripcion) return;
-        const data = await getDashboardStats(inscripcion.idInscripcion);
-        setStats(data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    loadStats();
-  }, [inscripcion, isAcademico]);
+    if (isAcademico || !inscripcion) return;
+    fetchStats(inscripcion.idInscripcion);
+  }, [inscripcion, isAcademico]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleLogout() {
     logout();

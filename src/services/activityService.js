@@ -38,21 +38,27 @@ export async function saveActivityResult({
   idInscripcion,
   missionId,
   activityType,
+  activityPrompt,
   score,
   studentAnswer,
   correctAnswer,
+  isCorrect,
+  aiExplanation,
 }) {
   try {
     await fetch(`${ORACLE_BASE}/activities/result`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id_inscripcion: idInscripcion,
-        mission_id: missionId,
-        activity_type: activityType,
+        id_inscripcion:  idInscripcion,
+        mission_id:      missionId,
+        activity_type:   activityType,
+        activity_prompt: activityPrompt ?? null,
+        correct_answer:  correctAnswer,
+        student_answer:  studentAnswer,
+        is_correct:      isCorrect ? "Y" : "N",
         score,
-        student_answer: studentAnswer,
-        correct_answer: correctAnswer,
+        ai_explanation:  aiExplanation ?? null,
       }),
     });
   } catch { /* persistence es opcional */ }

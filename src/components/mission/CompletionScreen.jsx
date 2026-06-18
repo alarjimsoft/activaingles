@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Trophy, Star, Clock, MessageCircle, Mic, Zap, LayoutDashboard } from "lucide-react";
 
 import useAuthStore from "../../store/authStore";
+import useStatsStore from "../../store/useStatsStore";
 import { getMissionProgress, completeMission } from "../../services/progressService";
 
 function ScoreCard({ icon: Icon, label, value, color, suffix = "" }) {
@@ -27,8 +28,9 @@ function ScoreCard({ icon: Icon, label, value, color, suffix = "" }) {
 }
 
 export default function CompletionScreen({ mission, practiceScore = null }) {
-  const navigate   = useNavigate();
-  const inscripcion = useAuthStore((state) => state.inscripcion);
+  const navigate      = useNavigate();
+  const inscripcion   = useAuthStore((state) => state.inscripcion);
+  const invalidate    = useStatsStore((state) => state.invalidate);
 
   const [stats, setStats]     = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,7 +150,7 @@ export default function CompletionScreen({ mission, practiceScore = null }) {
       {/* Actions */}
       <div className="p-6 pt-0 space-y-3">
         <button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => { invalidate(); navigate("/dashboard"); }}
           className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2"
         >
           <LayoutDashboard size={18} />
