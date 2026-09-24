@@ -1,7 +1,7 @@
 import axios from "axios";
+import { ORACLE_URL } from "../config/api";
 
-const API =
-  "https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api/progress";
+const API = `${ORACLE_URL}/progress`;
 
 export async function startProgress({
   idInscripcion,
@@ -72,7 +72,7 @@ export async function completeMission({
 
 export async function getMissionProgress(idInscripcion, missionId) {
   const response = await fetch(
-    `https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api/progress/mission/${idInscripcion}/${missionId}`,
+    `${ORACLE_URL}/progress/mission/${idInscripcion}/${missionId}`,
   );
 
   return await response.json();

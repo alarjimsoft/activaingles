@@ -1,5 +1,7 @@
-const FASTAPI    = "http://127.0.0.1:8000";
-const ORACLE_BASE = "https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api";
+import { API_URL, ORACLE_URL } from "../config/api";
+
+const FASTAPI    = API_URL;
+const ORACLE_BASE = ORACLE_URL;
 
 export async function generateActivities(missionContent, missionId, levelCode = "A1") {
   const res = await fetch(`${FASTAPI}/activities/generate`, {

@@ -1,5 +1,7 @@
+import { API_URL } from "../config/api";
+
 export async function speakText(text) {
-  const response = await fetch("http://127.0.0.1:8000/tts/speak", {
+  const response = await fetch(`${API_URL}/tts/speak`, {
     method: "POST",
 
     headers: {

@@ -1,3 +1,5 @@
+import { API_URL } from "../config/api";
+
 export async function evaluatePronunciation(
   audioBlob,
 
@@ -10,7 +12,7 @@ export async function evaluatePronunciation(
   formData.append("reference_text", referenceText);
 
   const response = await fetch(
-    "http://127.0.0.1:8000/speech/pronunciation-score",
+    `${API_URL}/speech/pronunciation-score`,
 
     {
       method: "POST",

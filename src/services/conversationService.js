@@ -1,7 +1,7 @@
 import axios from "axios";
+import { ORACLE_URL } from "../config/api";
 
-const API =
-  "https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api/chat";
+const API = `${ORACLE_URL}/chat`;
 
 export async function startConversation({
   idInscripcion,

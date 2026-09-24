@@ -1,6 +1,8 @@
+import { ORACLE_URL } from "../config/api";
+
 export async function getMissions(idCurso, idInscripcion) {
   const response = await fetch(
-    `https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api/missions/course/${idCurso}/${idInscripcion}`,
+    `${ORACLE_URL}/missions/course/${idCurso}/${idInscripcion}`,
   );
 
   if (!response.ok) {
