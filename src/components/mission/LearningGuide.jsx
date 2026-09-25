@@ -6,6 +6,7 @@ import ObjectivesTab from "./learning/ObjectivesTab";
 import VocabularyTab from "./learning/VocabularyTab";
 import GrammarTab    from "./learning/GrammarTab";
 import ExamplesTab   from "./learning/ExamplesTab";
+import { LEARNING_TABS_BY_MISSION } from "../../config/learningTabs";
 
 const TABS = [
   { key: "objectives", label: "Objetivos",  icon: BookOpen },
@@ -34,9 +35,12 @@ export default function LearningGuide({ missionContent, onComplete, isCompleted 
       </div>
     );
   }
-  const [activeTab, setActiveTab] = useState("objectives");
+  const allowedTabs = LEARNING_TABS_BY_MISSION[missionContent.missionId];
+  const tabs = allowedTabs ? TABS.filter((t) => allowedTabs.includes(t.key)) : TABS;
+
+  const [activeTab, setActiveTab] = useState(tabs[0].key);
   const [visitedTabs, setVisitedTabs] = useState(
-    () => new Set(isCompleted ? TABS.map((t) => t.key) : ["objectives"]),
+    () => new Set(isCompleted ? tabs.map((t) => t.key) : [tabs[0].key]),
   );
 
   function handleTabChange(key) {
@@ -44,13 +48,14 @@ export default function LearningGuide({ missionContent, onComplete, isCompleted 
     setVisitedTabs((prev) => new Set([...prev, key]));
   }
 
-  const allVisited = isCompleted || visitedTabs.size === TABS.length;
+  const visitedCount = tabs.filter((t) => visitedTabs.has(t.key)).length;
+  const allVisited   = isCompleted || visitedCount === tabs.length;
 
   return (
     <div className="bg-zinc-900 rounded-3xl overflow-hidden">
       {/* Tab bar */}
       <div className="flex border-b border-zinc-800">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const Icon      = tab.icon;
           const isActive  = activeTab === tab.key;
           const isVisited = visitedTabs.has(tab.key);
@@ -126,7 +131,7 @@ export default function LearningGuide({ missionContent, onComplete, isCompleted 
         >
           {allVisited
             ? "Continuar a Práctica →"
-            : `Visita todos los tabs para continuar (${visitedTabs.size}/4)`}
+            : `Visita todos los tabs para continuar (${visitedCount}/${tabs.length})`}
         </button>
       </div>
     </div>
