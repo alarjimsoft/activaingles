@@ -1,7 +1,10 @@
-fastapi
-uvicorn
-google-cloud-speech
-google-cloud-texttospeech
-openai
-python-dotenv
-python-multipart
+fastapi==0.128.0
+uvicorn==0.40.0
+google-cloud-speech==2.39.0
+google-cloud-texttospeech==2.36.0
+openai==2.37.0
+python-dotenv==1.2.1
+python-multipart==0.0.29
+requests==2.34.2
+azure-cognitiveservices-speech==1.50.0
+ffmpeg-python==0.2.0

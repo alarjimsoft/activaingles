@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": { "serviceId": "activa-backend", "region": "us-east1" }
+      },
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
+}

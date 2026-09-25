@@ -1,9 +1,11 @@
+import { API_URL } from "../config/api";
+
 export async function speechToText(audioBlob) {
   const formData = new FormData();
 
   formData.append("audio", audioBlob, "recording.webm");
 
-  const response = await fetch("http://127.0.0.1:8000/speech/to-text", {
+  const response = await fetch(`${API_URL}/speech/to-text`, {
     method: "POST",
     body: formData,
   });

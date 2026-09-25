@@ -1,5 +1,6 @@
-const ORACLE_BASE =
-  "https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api";
+import { ORACLE_URL } from "../config/api";
+
+const ORACLE_BASE = ORACLE_URL;
 
 export async function loginStudent(matricula, password) {
   const response = await fetch(`${ORACLE_BASE}/auth/login`, {
