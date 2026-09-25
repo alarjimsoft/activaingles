@@ -13,6 +13,7 @@ class GenerateRequest(BaseModel):
     grammar: Optional[dict] = None
     level_code: str = "A1"
     activity_count: int = 4
+    include_matching: bool = False
 
 
 class EvaluateRequest(BaseModel):
@@ -30,7 +31,9 @@ async def generate_route(request: GenerateRequest):
             "grammar": request.grammar or {},
             "level_code": request.level_code,
         }
-        activities = generate_activities(context, request.activity_count)
+        activities = generate_activities(
+            context, request.activity_count, request.include_matching
+        )
         return {"activities": activities}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

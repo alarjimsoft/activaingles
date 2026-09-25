@@ -13,6 +13,7 @@ export async function generateActivities(missionContent, missionId, levelCode = 
       grammar: missionContent.grammar ?? null,
       level_code: levelCode,
       activity_count: 4,
+      include_matching: true,
     }),
   });
   if (!res.ok) throw new Error("Activity generation failed");
