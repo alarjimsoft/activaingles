@@ -7,6 +7,24 @@ import { generateActivities, evaluateAnswer, saveActivityResult } from "../../se
 import ActivityCard from "./ActivityCard";
 import ActivityFeedback from "./ActivityFeedback";
 
+// Relacionar se califica localmente: comparación exacta de pares, puntaje parcial.
+function gradeMatching(pairs, studentPairs) {
+  const pairResults = pairs.map((pair, i) => ({
+    left:    pair.left,
+    correct: pair.right,
+    chosen:  studentPairs[i]?.right ?? "",
+    ok:      studentPairs[i]?.right === pair.right,
+  }));
+  const hits = pairResults.filter((r) => r.ok).length;
+
+  return {
+    is_correct:  hits === pairs.length,
+    score:       Math.round((hits / pairs.length) * 100),
+    explanation: `Acertaste ${hits} de ${pairs.length} pares.`,
+    pairResults,
+  };
+}
+
 export default function PracticeZone({
   missionContent,
   missionId,
@@ -40,25 +58,32 @@ export default function PracticeZone({
   }
 
   async function handleSubmit(answer) {
-    const activity = activities[currentIdx];
+    const activity   = activities[currentIdx];
+    const isMatching = activity.type === "matching";
     setPhase("evaluating");
 
     let result;
-    try {
-      result = await evaluateAnswer({
-        activityType:  activity.type,
-        prompt:        activity.prompt,
-        correctAnswer: activity.correct_answer,
-        studentAnswer: answer,
-      });
-    } catch {
-      // Si falla la evaluación, marcar como correcta para no bloquear
-      result = { is_correct: true, score: 100, explanation: "" };
+    if (isMatching) {
+      result = gradeMatching(activity.pairs, answer);
+    } else {
+      try {
+        result = await evaluateAnswer({
+          activityType:  activity.type,
+          prompt:        activity.prompt,
+          correctAnswer: activity.correct_answer,
+          studentAnswer: answer,
+        });
+      } catch {
+        // Si falla la evaluación, marcar como correcta para no bloquear
+        result = { is_correct: true, score: 100, explanation: "" };
+      }
     }
+
+    const studentAnswer = isMatching ? JSON.stringify(answer) : answer;
 
     const fullResult = {
       ...result,
-      studentAnswer: answer,
+      studentAnswer,
       correctAnswer: activity.correct_answer,
     };
 
@@ -74,7 +99,7 @@ export default function PracticeZone({
         activityType:   activity.type,
         activityPrompt: activity.prompt,
         score:          result.score,
-        studentAnswer:  answer,
+        studentAnswer,
         correctAnswer:  activity.correct_answer,
         isCorrect:      result.is_correct,
         aiExplanation:  result.explanation ?? null,
@@ -229,19 +254,23 @@ export default function PracticeZone({
       {/* Feedback */}
       {phase === "feedback" && currentResult && (
         <>
-          <ActivityCard
-            activity={currentActivity}
-            activityNumber={currentIdx + 1}
-            totalActivities={activities.length}
-            onSubmit={() => {}}
-            isEvaluating={false}
-          />
+          {/* Relacionar muestra el detalle de pares en el feedback */}
+          {currentActivity.type !== "matching" && (
+            <ActivityCard
+              activity={currentActivity}
+              activityNumber={currentIdx + 1}
+              totalActivities={activities.length}
+              onSubmit={() => {}}
+              isEvaluating={false}
+            />
+          )}
           <ActivityFeedback
             isCorrect={currentResult.is_correct}
             score={currentResult.score}
             correctAnswer={currentResult.correctAnswer}
             studentAnswer={currentResult.studentAnswer}
             explanation={currentResult.explanation}
+            pairResults={currentResult.pairResults}
             onNext={handleNext}
             isLast={isLast}
           />

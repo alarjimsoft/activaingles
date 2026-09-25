@@ -59,6 +59,97 @@ function MultipleChoiceActivity({ options, answer, onAnswerChange }) {
   );
 }
 
+const MATCH_COLORS = [
+  "border-cyan-500 bg-cyan-500/10",
+  "border-violet-500 bg-violet-500/10",
+  "border-amber-500 bg-amber-500/10",
+  "border-emerald-500 bg-emerald-500/10",
+  "border-pink-500 bg-pink-500/10",
+  "border-sky-500 bg-sky-500/10",
+];
+
+function shuffle(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+// matches: { índice del par (izquierda) → texto elegido (derecha) }
+function MatchingActivity({ pairs, matches, onMatchesChange }) {
+  const [rights] = useState(() => shuffle(pairs.map((p) => p.right)));
+  const [selectedLeft, setSelectedLeft] = useState(null);
+
+  function handleRightClick(right) {
+    if (selectedLeft === null) return;
+    const next = Object.fromEntries(
+      Object.entries(matches).filter(([, value]) => value !== right),
+    );
+    next[selectedLeft] = right;
+    onMatchesChange(next);
+    setSelectedLeft(null);
+  }
+
+  function leftIndexOf(right) {
+    const entry = Object.entries(matches).find(([, value]) => value === right);
+    return entry ? Number(entry[0]) : null;
+  }
+
+  const colorOf = (leftIdx) => MATCH_COLORS[leftIdx % MATCH_COLORS.length];
+
+  return (
+    <div className="space-y-3">
+      <p className="text-zinc-500 text-xs">Toca una palabra y después su significado.</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
+          {pairs.map((pair, i) => {
+            const isSelected = selectedLeft === i;
+            const isMatched  = matches[i] !== undefined;
+            return (
+              <button
+                key={pair.left}
+                onClick={() => setSelectedLeft(isSelected ? null : i)}
+                className={`w-full text-left px-4 py-3 rounded-2xl border text-sm transition-colors ${
+                  isSelected
+                    ? "border-white bg-white/10 text-white"
+                    : isMatched
+                    ? `${colorOf(i)} text-white`
+                    : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                }`}
+              >
+                {pair.left}
+              </button>
+            );
+          })}
+        </div>
+        <div className="space-y-3">
+          {rights.map((right) => {
+            const leftIdx = leftIndexOf(right);
+            return (
+              <button
+                key={right}
+                onClick={() => handleRightClick(right)}
+                disabled={selectedLeft === null}
+                className={`w-full text-left px-4 py-3 rounded-2xl border text-sm transition-colors ${
+                  leftIdx !== null
+                    ? `${colorOf(leftIdx)} text-white`
+                    : selectedLeft !== null
+                    ? "border-zinc-500 text-zinc-200 hover:border-cyan-500"
+                    : "border-zinc-700 text-zinc-400"
+                }`}
+              >
+                {right}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Punto de dificultad ───────────────────────────────────────────────────────
 
 const DIFFICULTY_COLOR = { easy: "bg-emerald-500", medium: "bg-yellow-500", hard: "bg-red-500" };
@@ -68,10 +159,21 @@ const DIFFICULTY_COLOR = { easy: "bg-emerald-500", medium: "bg-yellow-500", hard
 export default function ActivityCard({ activity, activityNumber, totalActivities, onSubmit, isEvaluating }) {
   const [answer, setAnswer]       = useState("");
   const [showHint, setShowHint]   = useState(false);
+  const [matches, setMatches]     = useState({});
+
+  const isMatching = activity.type === "matching";
+  const pairs      = activity.pairs ?? [];
+  const canSubmit  = isMatching
+    ? pairs.length > 0 && Object.keys(matches).length === pairs.length
+    : answer.trim() !== "";
 
   function handleSubmit() {
-    if (!answer.trim() || isEvaluating) return;
-    onSubmit(answer.trim());
+    if (!canSubmit || isEvaluating) return;
+    if (isMatching) {
+      onSubmit(pairs.map((pair, i) => ({ left: pair.left, right: matches[i] })));
+    } else {
+      onSubmit(answer.trim());
+    }
   }
 
   return (
@@ -120,6 +222,13 @@ export default function ActivityCard({ activity, activityNumber, totalActivities
           onAnswerChange={setAnswer}
         />
       )}
+      {isMatching && (
+        <MatchingActivity
+          pairs={pairs}
+          matches={matches}
+          onMatchesChange={setMatches}
+        />
+      )}
 
       {/* Pista */}
       {activity.hint && (
@@ -143,9 +252,9 @@ export default function ActivityCard({ activity, activityNumber, totalActivities
       {/* Submit */}
       <button
         onClick={handleSubmit}
-        disabled={!answer.trim() || isEvaluating}
+        disabled={!canSubmit || isEvaluating}
         className={`w-full py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-colors ${
-          answer.trim() && !isEvaluating
+          canSubmit && !isEvaluating
             ? "bg-cyan-500 hover:bg-cyan-400 text-black"
             : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
         }`}

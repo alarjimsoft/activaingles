@@ -7,6 +7,7 @@ export default function ActivityFeedback({
   correctAnswer,
   studentAnswer,
   explanation,
+  pairResults,
   onNext,
   isLast,
 }) {
@@ -33,8 +34,36 @@ export default function ActivityFeedback({
         </p>
       </div>
 
+      {/* Relacionar: resultado por par */}
+      {pairResults && (
+        <ul className="space-y-2">
+          {pairResults.map((pair) => (
+            <li
+              key={pair.left}
+              className="flex items-start gap-3 bg-zinc-900/60 rounded-xl p-3"
+            >
+              {pair.ok ? (
+                <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+              ) : (
+                <XCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+              )}
+              <div className="text-sm">
+                <p className="text-white">
+                  {pair.left} <span className="text-zinc-500">→</span> {pair.chosen}
+                </p>
+                {!pair.ok && (
+                  <p className="text-zinc-400 text-xs mt-1">
+                    Correcto: <span className="text-emerald-300">{pair.correct}</span>
+                  </p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {/* Respuesta correcta si falló */}
-      {!isCorrect && (
+      {!isCorrect && !pairResults && (
         <div className="bg-zinc-900/60 rounded-xl p-3">
           <p className="text-zinc-400 text-xs mb-1">Respuesta correcta</p>
           <p className="text-white font-medium">{correctAnswer}</p>
