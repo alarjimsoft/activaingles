@@ -5,192 +5,109 @@ import {
   User,
   GraduationCap,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
 
 import { motion } from "framer-motion";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import useAuthStore from "../../store/authStore";
 
-import { getDashboardStats } from "../../services/dashboardService";
+import useStatsStore from "../../store/useStatsStore";
 
-const menuItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/dashboard",
-  },
+const studentMenuItems = [
+  { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { title: "Library", icon: Library, path: "/library" },
+  { title: "Progress", icon: BarChart3, path: "/progress" },
+  { title: "Profile", icon: User, path: "/profile" },
+];
 
-  {
-    title: "Library",
-    icon: Library,
-    path: "/library",
-  },
-
-  {
-    title: "Progress",
-    icon: BarChart3,
-    path: "/progress",
-  },
-
-  {
-    title: "Profile",
-    icon: User,
-    path: "/profile",
-  },
+const academicoMenuItems = [
+  { title: "Content Manager", icon: BookOpen, path: "/content" },
 ];
 
 export default function Sidebar() {
   const navigate = useNavigate();
 
   const logout = useAuthStore((state) => state.logout);
-
   const student = useAuthStore((state) => state.student);
-
   const inscripcion = useAuthStore((state) => state.inscripcion);
+  const academico = useAuthStore((state) => state.academico);
+  const userType = useAuthStore((state) => state.userType);
 
-  const [stats, setStats] = useState(null);
+  const stats      = useStatsStore((state) => state.stats);
+  const fetchStats = useStatsStore((state) => state.fetchStats);
+
+  const isAcademico = userType === "academico";
+  const menuItems = isAcademico ? academicoMenuItems : studentMenuItems;
 
   useEffect(() => {
-    async function loadStats() {
-      try {
-        if (!inscripcion) return;
-
-        const data = await getDashboardStats(inscripcion.idInscripcion);
-
-        setStats(data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    loadStats();
-  }, [inscripcion]);
+    if (isAcademico || !inscripcion) return;
+    fetchStats(inscripcion.idInscripcion);
+  }, [inscripcion, isAcademico]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleLogout() {
     logout();
-
     navigate("/");
   }
 
+  const displayName = isAcademico
+    ? `${academico?.nombre ?? ""} ${academico?.apellidoPaterno ?? ""}`.trim()
+    : student?.nombre ?? "";
+
+  const displaySub = isAcademico
+    ? (academico?.rol ?? "Académico")
+    : student?.nivel ?? "A1";
+
   return (
-    <aside
-      className="
-        w-72
-        min-h-screen
-        bg-zinc-950
-        border-r
-        border-zinc-800
-        flex
-        flex-col
-        px-6
-        py-8
-      "
-    >
+    <aside className="w-72 min-h-screen bg-zinc-950 border-r border-zinc-800 flex flex-col px-6 py-8">
       {/* Logo */}
       <motion.div
-        className="
-          flex
-          items-center
-          gap-3
-          mb-12
-        "
-        initial={{
-          opacity: 0,
-          x: -20,
-        }}
-        animate={{
-          opacity: 1,
-          x: 0,
-        }}
-        transition={{
-          duration: 0.5,
-        }}
+        className="flex items-center gap-3 mb-12"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        <div
-          className="
-            bg-cyan-500
-            p-3
-            rounded-2xl
-          "
-        >
+        <div className="bg-cyan-500 p-3 rounded-2xl">
           <GraduationCap className="text-white" size={24} />
         </div>
 
         <div>
-          <h1
-            className="
-              text-white
-              text-2xl
-              font-bold
-            "
-          >
-            Activa Inglés
-          </h1>
-
-          <p
-            className="
-              text-zinc-400
-              text-sm
-            "
-          >
-            Mission Control
+          <h1 className="text-white text-2xl font-bold">Activa Inglés</h1>
+          <p className="text-zinc-400 text-sm">
+            {isAcademico ? "Content Manager" : "Mission Control"}
           </p>
         </div>
       </motion.div>
 
       {/* Navigation */}
-      <nav
-        className="
-          flex
-          flex-col
-          gap-3
-        "
-      >
+      <nav className="flex flex-col gap-3">
         {menuItems.map((item) => {
           const Icon = item.icon;
 
           return (
             <motion.div
               key={item.title}
-              whileHover={{
-                x: 5,
-              }}
-              whileTap={{
-                scale: 0.98,
-              }}
+              whileHover={{ x: 5 }}
+              whileTap={{ scale: 0.98 }}
             >
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `
-                  flex
-                  items-center
-                  gap-4
-                  px-4 py-4
-                  rounded-2xl
-                  transition-all
-                  duration-300
-                  group
-                  ${
+                  `flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
                     isActive
                       ? "bg-cyan-500 text-black"
                       : "text-zinc-300 hover:bg-zinc-900 hover:text-cyan-400"
-                  }
-                `
+                  }`
                 }
               >
                 <Icon
                   size={22}
-                  className="
-                    group-hover:scale-110
-                    transition-transform
-                  "
+                  className="group-hover:scale-110 transition-transform"
                 />
-
                 <span className="font-medium">{item.title}</span>
               </NavLink>
             </motion.div>
@@ -200,88 +117,38 @@ export default function Sidebar() {
 
       {/* Bottom Section */}
       <div className="mt-auto">
-        <div
-          className="
-            bg-zinc-900
-            border
-            border-zinc-800
-            rounded-3xl
-            p-5
-          "
-        >
-          <p
-            className="
-              text-zinc-400
-              text-sm
-              mb-2
-            "
-          >
-            Current Level
-          </p>
-
-          <h2
-            className="
-              text-cyan-400
-              text-3xl
-              font-bold
-            "
-          >
-            {student?.nivel || "A1"}
-          </h2>
-
-          {/* Progress Bar */}
-          <div
-            className="
-              w-full
-              h-2
-              bg-zinc-800
-              rounded-full
-              mt-4
-            "
-          >
-            <div
-              className="
-                h-full
-                bg-cyan-500
-                rounded-full
-                transition-all
-                duration-500
-              "
-              style={{
-                width: `${stats?.avg_progress || 0}%`,
-              }}
-            />
+        {isAcademico ? (
+          /* Academic profile card */
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
+            <p className="text-zinc-400 text-sm mb-1">Rol</p>
+            <h2 className="text-cyan-400 text-xl font-bold">
+              {academico?.rol ?? "ADMIN"}
+            </h2>
+            <p className="text-zinc-500 text-xs mt-2 truncate">{displayName}</p>
           </div>
+        ) : (
+          /* Student level card */
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
+            <p className="text-zinc-400 text-sm mb-2">Current Level</p>
+            <h2 className="text-cyan-400 text-3xl font-bold">{displaySub}</h2>
 
-          <p
-            className="
-              text-zinc-500
-              text-xs
-              mt-2
-            "
-          >
-            {stats?.avg_progress || 0}% completed
-          </p>
-        </div>
+            <div className="w-full h-2 bg-zinc-800 rounded-full mt-4">
+              <div
+                className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+                style={{ width: `${stats?.avg_progress || 0}%` }}
+              />
+            </div>
+
+            <p className="text-zinc-500 text-xs mt-2">
+              {stats?.avg_progress || 0}% completed
+            </p>
+          </div>
+        )}
 
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="
-            w-full
-            mt-4
-            flex
-            items-center
-            justify-center
-            gap-3
-            bg-red-500/20
-            hover:bg-red-500
-            text-red-400
-            hover:text-white
-            py-4
-            rounded-2xl
-            transition-all
-          "
+          className="w-full mt-4 flex items-center justify-center gap-3 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white py-4 rounded-2xl transition-all"
         >
           <LogOut size={18} />
           Logout

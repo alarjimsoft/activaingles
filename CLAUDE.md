@@ -21,22 +21,22 @@ Lee este archivo antes de tocar cualquier código.
 
 ### Stack tecnológico
 
-| Capa | Tecnología | Versión |
-|---|---|---|
-| Frontend | React + Vite | 19.2.5 / 8.0.10 |
-| Estilos | Tailwind CSS v4 | 4.3.0 |
-| Estado global | Zustand (con persist) | 5.0.13 |
-| Routing | React Router DOM | 7.15.0 |
-| Animaciones | Framer Motion | 12.38.0 |
-| HTTP | fetch (nativo) + axios | mixto |
-| PDF | jsPDF | 4.2.1 |
-| Backend | FastAPI + Python 3.13 | — |
-| IA conversacional | OpenAI GPT-4.1-mini | — |
-| Speech-to-Text | Google Cloud Speech | en-US, WEBM_OPUS |
-| Text-to-Speech | Google Cloud TTS | en-US-Neural2-J |
-| Pronunciación | Azure Cognitive Services | Phoneme granularity |
-| Base de datos | Oracle Autonomous Database | — |
-| API de datos | Oracle ORDS | REST sobre ADB |
+| Capa              | Tecnología                 | Versión             |
+| ----------------- | -------------------------- | ------------------- |
+| Frontend          | React + Vite               | 19.2.5 / 8.0.10     |
+| Estilos           | Tailwind CSS v4            | 4.3.0               |
+| Estado global     | Zustand (con persist)      | 5.0.13              |
+| Routing           | React Router DOM           | 7.15.0              |
+| Animaciones       | Framer Motion              | 12.38.0             |
+| HTTP              | fetch (nativo) + axios     | mixto               |
+| PDF               | jsPDF                      | 4.2.1               |
+| Backend           | FastAPI + Python 3.13      | —                   |
+| IA conversacional | OpenAI GPT-4.1-mini        | —                   |
+| Speech-to-Text    | Google Cloud Speech        | en-US, WEBM_OPUS    |
+| Text-to-Speech    | Google Cloud TTS           | en-US-Neural2-J     |
+| Pronunciación     | Azure Cognitive Services   | Phoneme granularity |
+| Base de datos     | Oracle Autonomous Database | —                   |
+| API de datos      | Oracle ORDS                | REST sobre ADB      |
 
 ### Flujo de datos real (no el ideal)
 
@@ -126,15 +126,15 @@ Oracle ADB es la **única fuente oficial de verdad**. Nunca diseñar lógica que
 
 ### Tablas principales
 
-| Tabla | Rol |
-|---|---|
-| `ESTUDIANTES` | Datos del estudiante (nombre, matrícula, nivel) |
-| `INSCRIPCIONES` | Relación estudiante-curso. `id_inscripcion` es el ID pedagógico principal |
-| `TOPICS` | Temas que agrupan misiones |
-| `MISSIONS` | Actividades pedagógicas con estado por inscripción |
-| `USER_PROGRESS` | **Núcleo pedagógico.** Progreso, XP, tiempo, gramática, pronunciación por misión |
-| `CONVERSATIONS` | Sesiones de conversación dentro de una misión |
-| `CONVERSATION_MESSAGES` | Mensajes individuales (sender: 'student' / 'tutor') |
+| Tabla                   | Rol                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| `ESTUDIANTES`           | Datos del estudiante (nombre, matrícula, nivel)                                  |
+| `INSCRIPCIONES`         | Relación estudiante-curso. `id_inscripcion` es el ID pedagógico principal        |
+| `TOPICS`                | Temas que agrupan misiones                                                       |
+| `MISSIONS`              | Actividades pedagógicas con estado por inscripción                               |
+| `USER_PROGRESS`         | **Núcleo pedagógico.** Progreso, XP, tiempo, gramática, pronunciación por misión |
+| `CONVERSATIONS`         | Sesiones de conversación dentro de una misión                                    |
+| `CONVERSATION_MESSAGES` | Mensajes individuales (sender: 'student' / 'tutor')                              |
 
 ### Endpoints ORDS activos
 
@@ -193,6 +193,7 @@ if completed: xp += 50           # +50 al completar misión
 
 **Ubicación:** `src/components/mission/TutorChat.jsx` (785 líneas)
 **Responsabilidad:** Orquesta TODO el flujo de aprendizaje:
+
 - Chat de texto con GPT
 - Grabación de audio + STT + pronunciación Azure
 - TTS de respuestas del tutor
@@ -201,12 +202,14 @@ if completed: xp += 50           # +50 al completar misión
 - Exportación PDF
 
 **Al modificar este archivo:** verificar ambas funciones de envío:
+
 - `sendMessage()` — flujo de texto
 - `sendTranscriptMessage()` — flujo de voz
 
 Ambas tienen lógica duplicada — un cambio en una debe replicarse en la otra hasta que se refactorice.
 
 **Props que recibe:**
+
 ```jsx
 <TutorChat mission={missionObject} setProgress={setProgressFn} />
 ```
@@ -215,6 +218,7 @@ Ambas tienen lógica duplicada — un cambio en una debe replicarse en la otra h
 
 **Ubicación:** `backend/app/services/openai_service.py`
 El system prompt define el comportamiento completo del tutor. El modelo es `gpt-4.1-mini` con `response_format: json_object`. La respuesta siempre tiene la forma:
+
 ```json
 { "reply": "...", "correction": { "original": "...", "corrected": "...", "explanation": "..." } | null }
 ```
@@ -232,37 +236,37 @@ Persiste `{ student, inscripcion, isAuthenticated }` en `localStorage["activa-in
 
 ### Alta — actuar antes de producción
 
-| ID | Problema | Ubicación |
-|---|---|---|
-| TD-A01 | Backend FastAPI sin autenticación | `backend/app/main.py` |
-| TD-A02 | Oracle ORDS expuesto desde el browser | 6 archivos en `src/services/` |
-| TD-A03 | API keys en `.env` texto plano | `backend/.env` |
-| TD-A04 | TutorChat.jsx de 785 líneas | `src/components/mission/TutorChat.jsx` |
-| TD-A05 | `sendMessage` y `sendTranscriptMessage` duplicados | `TutorChat.jsx:282,389` |
-| TD-A06 | `speech_router` registrado 2 veces en FastAPI | `backend/app/main.py:25,28` |
-| TD-A07 | `grammarScore` hardcodeado a 85 | `TutorChat.jsx:367,475` y `chat.py:53` |
-| TD-A08 | `pronunciationScore: 0` en mensajes de texto | `TutorChat.jsx:477` |
-| TD-A09 | Stream de micrófono nunca se cierra | `TutorChat.jsx:startListening()` |
-| TD-A10 | `URL.createObjectURL` sin `revokeObjectURL` | `TutorChat.jsx:269` |
-| TD-A11 | `getDashboardStats` llamado 2 veces por render | `Dashboard.jsx` + `Sidebar.jsx` |
+| ID     | Problema                                           | Ubicación                              |
+| ------ | -------------------------------------------------- | -------------------------------------- |
+| TD-A01 | Backend FastAPI sin autenticación                  | `backend/app/main.py`                  |
+| TD-A02 | Oracle ORDS expuesto desde el browser              | 6 archivos en `src/services/`          |
+| TD-A03 | API keys en `.env` texto plano                     | `backend/.env`                         |
+| TD-A04 | TutorChat.jsx de 785 líneas                        | `src/components/mission/TutorChat.jsx` |
+| TD-A05 | `sendMessage` y `sendTranscriptMessage` duplicados | `TutorChat.jsx:282,389`                |
+| TD-A06 | `speech_router` registrado 2 veces en FastAPI      | `backend/app/main.py:25,28`            |
+| TD-A07 | `grammarScore` hardcodeado a 85                    | `TutorChat.jsx:367,475` y `chat.py:53` |
+| TD-A08 | `pronunciationScore: 0` en mensajes de texto       | `TutorChat.jsx:477`                    |
+| TD-A09 | Stream de micrófono nunca se cierra                | `TutorChat.jsx:startListening()`       |
+| TD-A10 | `URL.createObjectURL` sin `revokeObjectURL`        | `TutorChat.jsx:269`                    |
+| TD-A11 | `getDashboardStats` llamado 2 veces por render     | `Dashboard.jsx` + `Sidebar.jsx`        |
 
 ### Media — actuar en próximas iteraciones
 
-| ID | Problema |
-|---|---|
-| TD-M01 | `completeMission()` nunca se llama |
-| TD-M02 | Mezcla de `fetch` y `axios` sin criterio |
-| TD-M03 | URLs hardcodeadas en 10 archivos |
-| TD-M04 | `useAppStore` con mensajes iniciales hardcodeados |
-| TD-M05 | `totalTimeMinutes: 5` hardcodeado |
+| ID     | Problema                                            |
+| ------ | --------------------------------------------------- |
+| TD-M01 | `completeMission()` nunca se llama                  |
+| TD-M02 | Mezcla de `fetch` y `axios` sin criterio            |
+| TD-M03 | URLs hardcodeadas en 10 archivos                    |
+| TD-M04 | `useAppStore` con mensajes iniciales hardcodeados   |
+| TD-M05 | `totalTimeMinutes: 5` hardcodeado                   |
 | TD-M06 | `recognize_once()` Azure bloquea event loop FastAPI |
-| TD-M07 | `ffmpeg` no declarado en requirements.txt |
-| TD-M08 | Sin rate limiting en el backend |
-| TD-M09 | `alert()` nativo como UI de feedback |
-| TD-M10 | Prompt injection en `/chat/message` |
-| TD-M11 | Historial de conversación sin paginación |
-| TD-M12 | Sesión sin expiración |
-| TD-M13 | GPT no recibe historial de conversación |
+| TD-M07 | `ffmpeg` no declarado en requirements.txt           |
+| TD-M08 | Sin rate limiting en el backend                     |
+| TD-M09 | `alert()` nativo como UI de feedback                |
+| TD-M10 | Prompt injection en `/chat/message`                 |
+| TD-M11 | Historial de conversación sin paginación            |
+| TD-M12 | Sesión sin expiración                               |
+| TD-M13 | GPT no recibe historial de conversación             |
 
 Ver detalle completo en `docs/TECHNICAL_DEBT.md`.
 
@@ -316,11 +320,13 @@ BUG-06: pronunciationScore siempre 0 en mensajes de texto → avg_pronunciation 
 ### Commits
 
 El proyecto usa commits descriptivos en español:
+
 ```
 guarda pronunciation score en oracle
 funcion de evaluación de pronunciación con barras de score agregada
 Sistema de puntos XP y niveles funcionando
 ```
+
 Mantener este estilo — español, descriptivo, sin prefijos tipo `feat:` / `fix:`.
 
 ---
@@ -364,14 +370,14 @@ Mantener este estilo — español, descriptivo, sin prefijos tipo `feat:` / `fix
 
 ## 11. Páginas y su Estado
 
-| Ruta | Componente | Estado |
-|---|---|---|
-| `/` | `LoginPage` | ✅ Completa |
-| `/dashboard` | `Dashboard` | ✅ Completa |
-| `/missions/:id` | `MissionPage` | ✅ Completa |
-| `/progress` | `Progress` | ❌ Solo `<h1>` — implementar |
-| `/library` | `Library` | ❌ Solo `<h1>` — implementar |
-| `/profile` | `Profile` | ❌ Solo `<h1>` — implementar |
+| Ruta            | Componente    | Estado                       |
+| --------------- | ------------- | ---------------------------- |
+| `/`             | `LoginPage`   | ✅ Completa                  |
+| `/dashboard`    | `Dashboard`   | ✅ Completa                  |
+| `/missions/:id` | `MissionPage` | ✅ Completa                  |
+| `/progress`     | `Progress`    | ❌ Solo `<h1>` — implementar |
+| `/library`      | `Library`     | ❌ Solo `<h1>` — implementar |
+| `/profile`      | `Profile`     | ❌ Solo `<h1>` — implementar |
 
 ---
 
@@ -388,6 +394,7 @@ AZURE_SPEECH_REGION=eastus
 ### Frontend — no existe `.env`, URLs hardcodeadas
 
 Cuando se cree, usar `import.meta.env.VITE_*`:
+
 ```
 VITE_API_URL=http://127.0.0.1:8000
 VITE_ORACLE_URL=https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api
@@ -431,35 +438,41 @@ uvicorn app.main:app --reload
 ## 15. Roadmap Técnico
 
 ### Iteración 1 — Integridad de datos (pendiente)
+
 - Llamar `completeMission()` al completar una misión.
 - Calcular `grammarScore` real desde la respuesta de GPT.
 - Medir `totalTimeMinutes` con `Date.now()`.
 - Resolver `speech_router` duplicado en `main.py`.
 
 ### Iteración 2 — Calidad del tutor (pendiente)
+
 - Pasar historial de conversación a GPT (últimos N mensajes).
 - Eliminar `initialConversation` hardcodeada del store.
 - Recuperar misión por `useParams` en MissionPage.
 - Reemplazar `alert()` con sistema de notificaciones.
 
 ### Iteración 3 — Páginas pendientes (pendiente)
+
 - `/progress` — historial de XP y evolución de scores.
 - `/profile` — datos del estudiante.
 - `/library` — recursos por topic.
 - Racha de días real desde Oracle.
 
 ### Iteración 4 — Seguridad y deployment (pendiente)
+
 - Autenticación en FastAPI.
 - Variables de entorno en el frontend.
 - Mover todas las llamadas ORDS detrás de FastAPI.
 - Configurar CORS para producción.
 
 ### Iteración 5 — Refactorización (pendiente)
+
 - Extraer `useAudioRecorder`, `useTutorChat`, `useMissionProgress` de TutorChat.jsx.
 - Centralizar cliente HTTP.
 - Cerrar stream de micrófono + revocar blob URLs.
 
 ### Iteración 6 — Fase 2 del producto (pendiente)
+
 - Speaking Challenges con texto de referencia predefinido.
 - Visualización fonémica de Azure.
 - Ejercicios dinámicos generados por IA.
@@ -479,3 +492,63 @@ uvicorn app.main:app --reload
 **El componente que más cambiará es `TutorChat.jsx`.** Siempre leerlo completo antes de modificarlo — sus dos funciones de envío son casi idénticas y un cambio en una debe replicarse en la otra.
 
 **El archivo más delicado del backend es `openai_service.py`.** El system prompt ahí define el comportamiento pedagógico completo del tutor. Cualquier cambio debe validarse con conversaciones de prueba reales.
+
+---
+
+## Future Architecture
+
+### Mission Learning Path
+
+Las misiones evolucionarán progresivamente desde un modelo de conversación libre hacia unidades completas de aprendizaje.
+
+La conversación con el Tutor IA debe considerarse la fase de práctica, no la fase principal de enseñanza.
+
+### Estructura objetivo de una misión
+
+1. Learning Objectives
+2. Vocabulary Guide
+3. Grammar Focus
+4. Examples
+5. Practice Activities
+6. Tutor Conversation
+7. Pronunciation Assessment
+8. Mission Completion
+
+### Modelo de implementación preferido
+
+#### Static Content
+
+Contenido definido por expertos pedagógicos:
+
+- Learning Objectives
+- Vocabulary
+- Grammar Focus
+- Examples
+
+#### Dynamic Content
+
+Contenido generado por IA:
+
+- Practice Activities
+- Mini Quizzes
+- Conversation Prompts
+- Adaptive Reinforcement
+
+### Principios
+
+- El estudiante debe llegar preparado a la conversación.
+- El tutor no debe introducir conceptos nuevos sin contexto.
+- La conversación debe reforzar los objetivos de aprendizaje.
+- La IA complementa el contenido pedagógico, no lo reemplaza.
+- Cada misión debe tener resultados medibles mediante progreso, gramática y pronunciación.
+
+### Estado
+
+EPIC-010 Mission Learning Path
+
+Estado actual:
+Planned
+
+Branch principal de desarrollo:
+
+epic/mission-learning-path

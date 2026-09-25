@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import useAuthStore from "../store/authStore";
 
 import { getMissions } from "../services/missionService";
-import { getDashboardStats } from "../services/dashboardService";
+import useStatsStore from "../store/useStatsStore";
 
 export default function Dashboard() {
   const student = useAuthStore((state) => state.student);
@@ -20,7 +20,8 @@ export default function Dashboard() {
   const inscripcion = useAuthStore((state) => state.inscripcion);
 
   const [missions, setMissions] = useState([]);
-  const [stats, setStats] = useState(null);
+  const stats        = useStatsStore((state) => state.stats);
+  const fetchStats   = useStatsStore((state) => state.fetchStats);
   const groupedMissions = missions.reduce((acc, mission) => {
     //const topicTitle = mission.topicTitle || "General";
     const topicTitle = mission.topicTitle;
@@ -35,20 +36,8 @@ export default function Dashboard() {
   }, {});
 
   useEffect(() => {
-    async function loadStats() {
-      try {
-        const data = await getDashboardStats(inscripcion.idInscripcion);
-
-        setStats(data);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    if (inscripcion) {
-      loadStats();
-    }
-  }, [inscripcion]);
+    if (inscripcion) fetchStats(inscripcion.idInscripcion);
+  }, [inscripcion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     async function loadMissions() {
@@ -152,7 +141,7 @@ export default function Dashboard() {
         <StatCard
           title="Completed Missions"
           value={stats?.completed_missions || 0}
-          subtitle="+2 this week"
+          subtitle="Total completadas"
         />
 
         <StatCard
@@ -163,7 +152,7 @@ export default function Dashboard() {
 
         <StatCard
           title="Current Streak"
-          value={`${student.streakDays ?? 0} Days`}
+          value={`${stats?.current_streak ?? 0} Days`}
           subtitle="Keep going"
         />
 
@@ -174,9 +163,9 @@ export default function Dashboard() {
         />
 
         <StatCard
-          title="Grammar"
-          value={`${stats?.avg_grammar || 0}%`}
-          subtitle="Grammar accuracy"
+          title="Avg Practice Score"
+          value={`${stats?.avg_practice_score || 0}%`}
+          subtitle="Practice performance"
         />
       </motion.div>
 

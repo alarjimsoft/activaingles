@@ -1,4 +1,5 @@
 # ROADMAP_2026.md
+
 # Activa Inglés — Roadmap Estratégico 2026
 
 > **Roles:** Product Owner Senior · Arquitecto Principal · CTO
@@ -20,14 +21,14 @@ El problema central no es funcionalidad faltante sino **datos corruptos en el n�
 
 ### Porcentaje estimado de avance
 
-| Dimensión | Avance |
-|---|---|
-| Fase 1 del roadmap oficial | 72% |
-| Visión total del producto | 44% |
-| Integridad de datos pedagógicos | 30% |
+| Dimensión                          | Avance       |
+| ---------------------------------- | ------------ |
+| Fase 1 del roadmap oficial         | 72%          |
+| Visión total del producto          | 44%          |
+| Integridad de datos pedagógicos    | 30%          |
 | Páginas del frontend implementadas | 50% (3 de 6) |
-| Seguridad production-ready | 15% |
-| **Avance global ponderado** | **~44%** |
+| Seguridad production-ready         | 15%          |
+| **Avance global ponderado**        | **~44%**     |
 
 ### Principales fortalezas
 
@@ -56,6 +57,7 @@ El problema central no es funcionalidad faltante sino **datos corruptos en el n�
 ---
 
 ## FASE 1 — PRÓXIMOS 30 DÍAS
+
 ### "Fundación de Integridad"
 
 **Objetivo de la fase:** Convertir el sistema de un prototipo con datos de placeholder a una plataforma con métricas pedagógicas reales y un tutor IA con coherencia conversacional. Al finalizar esta fase, el producto puede mostrarse a una institución universitaria con confianza.
@@ -69,6 +71,7 @@ El problema central no es funcionalidad faltante sino **datos corruptos en el n�
 **Objetivo:** Hacer que `USER_PROGRESS` contenga datos pedagógicos reales en cada campo.
 
 **Iniciativas incluidas:**
+
 - Eliminar `speech_router` duplicado en FastAPI (15 min)
 - Cerrar stream de micrófono + liberar blob URLs (30 min)
 - Medir tiempo de estudio real con `Date.now()` (30 min)
@@ -84,6 +87,7 @@ El problema central no es funcionalidad faltante sino **datos corruptos en el n�
 El Dashboard muestra métricas reales de gramática y pronunciación por primera vez. El XP refleja desempeño genuino. Los datos históricos futuros serán válidos.
 
 **Riesgos:**
+
 - El grammar score binario (90/55) genera varianza alta en el promedio del Dashboard para estudiantes con pocas interacciones. Aceptable para la primera iteración.
 - Los datos históricos ya en Oracle seguirán siendo inválidos. El Dashboard mostrará promedios mixtos (falsos pasados + reales futuros) hasta que el historial sea suficiente.
 
@@ -99,6 +103,7 @@ El Dashboard muestra métricas reales de gramática y pronunciación por primera
 Este es el cambio de mayor impacto pedagógico del roadmap completo. Un tutor que no recuerda lo que el estudiante dijo hace 2 mensajes no puede hacer seguimiento, no puede corregir patrones recurrentes, no puede preguntar "¿lograste practicar lo que vimos antes?". Sin memoria, el producto no puede diferenciarse de un chatbot genérico gratuito. La Regla #6 de PROJECT_VISION.md exige aprendizaje orientado a objetivos — eso requiere contexto conversacional.
 
 **Cambios:**
+
 1. `ChatRequest` en FastAPI agrega `history: list[dict] = []`
 2. `openai_service.py` construye el array `messages` con el historial + mensaje actual
 3. `chatService.js` incluye los últimos 8 mensajes del store en el payload
@@ -108,6 +113,7 @@ Este es el cambio de mayor impacto pedagógico del roadmap completo. Un tutor qu
 La calidad del tutor mejora dramáticamente. Las conversaciones tienen coherencia y continuidad. El estudiante siente que está hablando con un tutor real, no con un chatbot que olvida todo en cada mensaje.
 
 **Riesgos:**
+
 - Aumenta el costo de tokens de OpenAI en ~30-40% por petición. Con 8 mensajes de historial, el costo sigue siendo bajo pero debe monitorearse.
 - Requiere que `useAppStore` tenga el historial limpio. Depende de limpiar `initialConversation` primero.
 
@@ -123,6 +129,7 @@ La calidad del tutor mejora dramáticamente. Las conversaciones tienen coherenci
 La corrección gramatical es el dato pedagógico más valioso que produce el sistema. GPT lo genera, la UI lo muestra en `CorrectionCard`, pero desaparece cuando el usuario cierra la misión. Oracle tiene la columna `CORRECTION CLOB` creada específicamente para esto — está vacía. Persistir este dato habilita el análisis de errores frecuentes, el historial de correcciones por estudiante y eventualmente el Teacher Dashboard.
 
 **Cambios:**
+
 1. `conversationService.js`: incluir `correction` en el payload de `saveMessage` del tutor
 2. Endpoint ORDS `POST /chat/message`: agregar `:correction` al INSERT
 3. `TutorChat.jsx`: pasar `JSON.stringify(result.correction)` al guardar el mensaje del tutor
@@ -144,6 +151,7 @@ El historial de conversación en Oracle es pedagógicamente completo. Al reanuda
 `PKG_SERVICIOS_IA.sql` contiene claves de producción activas de OpenAI, Azure y Google en texto plano dentro del repositorio git. Si este repositorio ha sido compartido, enviado por correo o subido a cualquier servicio externo, las claves están comprometidas. Esta es la única iniciativa de seguridad que tiene un deadline implícito: cada día sin rotación es un día de exposición.
 
 **Acciones:**
+
 1. Verificar si el repositorio fue expuesto externamente (GitHub, GitLab, correo, etc.)
 2. Generar nuevas claves en los tres proveedores
 3. Actualizar `backend/.env` con las nuevas claves
@@ -163,6 +171,7 @@ Eliminación del mayor riesgo de seguridad económica del proyecto. Las claves e
 ### Entregable de Fase 1
 
 Al finalizar los 30 días:
+
 - `USER_PROGRESS` contiene datos pedagógicos reales por primera vez
 - El tutor IA tiene memoria de los últimos 8 mensajes de conversación
 - Las correcciones gramaticales se persisten en Oracle
@@ -176,6 +185,7 @@ Al finalizar los 30 días:
 ---
 
 ## FASE 2 — PRÓXIMOS 90 DÍAS
+
 ### "Consolidación del Core y Experiencia Completa"
 
 **Objetivo de la fase:** Completar al 100% la Fase 1 del roadmap oficial de PROJECT_VISION.md. Al finalizar esta fase, el producto tiene las 6 páginas implementadas, el sistema de seguridad básico activo y la base técnica preparada para escalar.
@@ -189,6 +199,7 @@ Al finalizar los 30 días:
 **Objetivo:** Implementar las dos páginas de mayor valor pedagógico que están completamente vacías.
 
 **Página /progress:**
+
 - Progreso por misión (barra individual + scores de grammar y pronunciation)
 - XP total y nivel con fórmula real (`LEVEL = FLOOR(XP/200) + 1`)
 - Tiempo de estudio acumulado
@@ -196,6 +207,7 @@ Al finalizar los 30 días:
 - Datos desde: `GET /progress/stats/:id`, `GET /progress/student/:id` (endpoint existente sin uso)
 
 **Página /profile:**
+
 - Datos del estudiante desde `authStore`: nombre, matrícula, carrera, nivel de inglés
 - XP total y nivel
 - Streak real de días
@@ -219,6 +231,7 @@ El estudiante tiene visibilidad de su evolución real. Las instituciones pueden 
 **Objetivo:** Eliminar todos los `alert()` nativos y reemplazarlos con un sistema de notificaciones integrado al diseño del producto.
 
 **Incluye:**
+
 - Componente `Toast.jsx` con Framer Motion (success, error, info, warning)
 - Reemplazar 3 instancias de `alert()` en `TutorChat.jsx`
 - Manejo visual de errores de red en el chat (spinner infinito → mensaje claro)
@@ -277,6 +290,7 @@ El proyecto es deployable en cualquier entorno con solo cambiar las variables de
 **Objetivo:** Implementar el repositorio de recursos gramaticales del curso.
 
 **Contenido:**
+
 - Lista de topics con sus gramáticas principales (`GRAMMAR_TITLE`, `GRAMMAR_EXAMPLE`)
 - Fichas de gramática descargables o consultables
 - Vocabulario clave por misión
@@ -298,6 +312,7 @@ Las 6 páginas del sistema tienen contenido real. El producto está completo en 
 **Objetivo:** Extraer las 7 responsabilidades de `TutorChat.jsx` en hooks independientes y unificar `sendMessage`/`sendTranscriptMessage`.
 
 **Hooks a extraer:**
+
 - `useAudioRecorder()` — grabación, MediaRecorder, stream lifecycle
 - `useTutorChat(mission, conversationId)` — mensajes, GPT, TTS, persistencia Oracle
 - `useMissionProgress(mission)` — progreso, XP, completado, carga inicial
@@ -322,6 +337,7 @@ Cada hook puede modificarse y probarse independientemente. El componente `TutorC
 **Objetivo:** Actualizar `ESTUDIANTES.STREAK_DAYS` y `ULTIMO_ACCESO` al hacer login exitoso.
 
 **Lógica en `PKG_AUTH.LOGIN_ESTUDIANTE`:**
+
 ```sql
 IF TRUNC(ULTIMO_ACCESO) = TRUNC(SYSDATE) - 1 THEN
     STREAK_DAYS := STREAK_DAYS + 1;
@@ -342,6 +358,7 @@ La racha de días es una de las métricas de gamificación más potentes para in
 ### Entregable de Fase 2
 
 Al finalizar los 90 días:
+
 - Las 6 páginas del sistema tienen contenido real
 - El backend tiene autenticación básica y rate limiting
 - El proyecto es deployable en cualquier entorno
@@ -356,6 +373,7 @@ Al finalizar los 90 días:
 ---
 
 ## FASE 3 — PRÓXIMOS 6 MESES
+
 ### "Expansión Pedagógica e Inteligencia Educativa"
 
 **Objetivo de la fase:** Implementar las funcionalidades diferenciadores del producto que lo posicionan como plataforma educativa premium y habilitan el negocio B2B con instituciones universitarias.
@@ -369,12 +387,14 @@ Al finalizar los 90 días:
 **Objetivo:** Agregar un segundo modo de práctica donde el estudiante pronuncia una frase específica y Azure evalúa contra esa frase de referencia.
 
 **Diferencia con el flujo actual:**
+
 - Flujo actual: el estudiante dice cualquier cosa → Azure compara contra la transcripción de lo que dijo
 - Speaking Challenge: se muestra una frase objetivo → el estudiante la pronuncia → Azure compara contra la frase exacta
 
 Esto da un score de pronunciación significativo de una expresión pedagógica definida por el currículo.
 
 **Requiere:**
+
 - Nueva estructura en Oracle: tabla `MISSION_CHALLENGES` o columna `REFERENCE_PHRASES` en MISSIONS
 - Nuevo modo de grabación en `TutorChat.jsx` (o nuevo componente `SpeakingChallenge.jsx`)
 - Cambio en `pronunciationService.js`: `referenceText` externo en lugar de la transcripción
@@ -398,6 +418,7 @@ Scores de pronunciación pedagógicamente válidos. Contenido estructurado que p
 **Azure SDK está configurado con `PronunciationAssessmentGranularity.Phoneme`** — el resultado incluye datos a nivel de palabra y fonema pero actualmente solo se devuelven los 4 scores globales.
 
 **Requiere:**
+
 - `azure_pronunciation.py`: incluir `NBest[0].Words` en la respuesta
 - `SPEAKING_ANALYSIS` (tabla Oracle existente): persistir análisis por palabra
 - Nuevo componente `WordFeedback.jsx`: palabras coloreadas por score de pronunciación
@@ -417,6 +438,7 @@ Retroalimentación pronunciación accionable. El estudiante sabe exactamente qu�
 **Objetivo:** Vista mínima para académicos que permita supervisar el progreso de sus estudiantes.
 
 **MVP del Teacher Dashboard:**
+
 - Login diferenciado por ROL = 'ACADEMICO' (tabla `ACADEMICOS` ya existe)
 - Lista de estudiantes inscritos en su curso con `ID_ACADEMICO`
 - Progreso por estudiante: misiones completadas, XP total, score promedio de pronunciación y gramática
@@ -441,6 +463,7 @@ El producto es vendible a nivel institucional. Los académicos pueden tomar deci
 **Objetivo:** Ajustar el system prompt del tutor basado en el desempeño histórico del estudiante.
 
 **Versión mínima:**
+
 - Antes de cada conversación, consultar `USER_PROGRESS.GRAMMAR_SCORE` y `PRONUNCIATION_SCORE` del estudiante
 - Si `GRAMMAR_SCORE < 60` promedio: el system prompt indica al tutor que simplifique el lenguaje y corrija con más paciencia
 - Si `GRAMMAR_SCORE > 80` promedio: el system prompt indica al tutor que introduzca estructuras más complejas
@@ -460,17 +483,20 @@ El tutor se adapta al nivel real del estudiante. Los principiantes no se frustra
 **Objetivo:** Eliminar el acceso directo del frontend a Oracle ORDS. Todo el tráfico de datos pasa por FastAPI.
 
 **Arquitectura objetivo:**
+
 ```
 React → FastAPI → Oracle ORDS → Oracle ADB
 ```
 
 **Actualmente:**
+
 ```
 React → Oracle ORDS directamente (6 servicios)
 React → FastAPI (4 servicios)
 ```
 
 **Requiere:**
+
 - ~10 nuevos endpoints en FastAPI que proxeen las llamadas actuales a Oracle ORDS
 - Migrar los 6 servicios del frontend de Oracle ORDS a FastAPI
 - FastAPI valida la sesión del usuario antes de cada llamada a Oracle
@@ -490,6 +516,7 @@ Arquitectura segura y correcta. FastAPI como único punto de control de autentic
 ### Entregable de Fase 3
 
 Al finalizar los 6 meses:
+
 - Speaking Challenges con evaluación de pronunciación de frases del currículo
 - Retroalimentación fonémica visual por palabra
 - Teacher Dashboard básico operativo
@@ -500,6 +527,129 @@ Al finalizar los 6 meses:
 ---
 
 ---
+
+## Q3 2026
+
+### EPIC-010 — Mission Learning Path
+
+Objetivo:
+Transformar las misiones de conversaciones libres en experiencias guiadas de aprendizaje.
+
+La misión dejará de ser únicamente un chat con IA y se convertirá en una ruta pedagógica estructurada.
+
+### Componentes
+
+#### Learning Guide
+
+Pantalla inicial que explica:
+
+- Qué aprenderá el estudiante
+- Objetivos de la misión
+- Habilidades que desarrollará
+- Duración estimada
+
+---
+
+#### Vocabulary Engine
+
+Presentación de vocabulario clave:
+
+- Palabra
+- Traducción
+- Pronunciación
+- Ejemplo de uso
+
+Generado dinámicamente mediante IA.
+
+---
+
+#### Grammar Focus
+
+Explicación breve de la estructura gramatical principal de la misión.
+
+Ejemplos:
+
+- Present Simple
+- Present Continuous
+- Past Simple
+- Future Forms
+
+---
+
+#### Examples
+
+Ejemplos contextualizados al tema de la misión.
+
+Ejemplo:
+
+Mission: Ordering Food
+
+Examples:
+
+- I'd like a pizza.
+- Can I have a glass of water?
+- Could you bring the menu?
+
+---
+
+#### Dynamic Exercises
+
+Actividades generadas por IA:
+
+- Fill in the blanks
+- Multiple choice
+- Sentence ordering
+- Speaking prompts
+
+Adaptadas al nivel del estudiante.
+
+---
+
+#### AI Generated Mini Quiz
+
+Evaluación rápida previa al inicio de la conversación.
+
+Objetivo:
+
+- Validar comprensión
+- Preparar al estudiante
+- Identificar dificultades iniciales
+
+---
+
+#### Tutor Context Enrichment
+
+El tutor recibe automáticamente:
+
+- Objetivos de aprendizaje
+- Vocabulario clave
+- Grammar Focus
+- Resultados del Mini Quiz
+
+Esto permite que la conversación esté alineada con el contenido pedagógico de la misión.
+
+### Beneficios esperados
+
+- Mayor retención de estudiantes
+- Aprendizaje más estructurado
+- Mejor desempeño en conversaciones
+- Menor dependencia de contenido manual
+- Diferenciación frente a chatbots genéricos
+
+### Dependencias
+
+Requiere:
+
+- Sistema de Misiones estable
+- Tutor IA con memoria
+- Pronunciation Assessment funcional
+- Dashboard pedagógico operativo
+
+### Prioridad
+
+Alta
+
+## Próxima iniciativa estratégica recomendada después de completar la Fase 2.
 
 ## ORDEN DE IMPLEMENTACIÓN RECOMENDADO
 
@@ -567,29 +717,29 @@ Requiere que el producto esté en producción real con al menos una institución
 
 ### Alta Prioridad
 
-| ID | Riesgo | Tipo | Descripción |
-|---|---|---|---|
-| RS-01 | Datos corruptos acumulados | Técnico / Producto | Cada día sin F1-01 agrega más historial falso en Oracle. Los promedios del Dashboard empeorarán progresivamente hasta que se corrijan los datos históricos. |
-| RS-02 | API keys comprometidas | Seguridad | `PKG_SERVICIOS_IA.sql` tiene las claves activas en el repositorio. Si fue expuesto, el costo puede ser ilimitado. |
-| RS-03 | Backend sin autenticación en producción | Seguridad / Financiero | Un script puede vaciar la cuota de OpenAI/Azure en horas. Cada petición a `/chat/message` cuesta dinero real. |
-| RS-04 | TutorChat.jsx como single point of failure | Técnico | 785 líneas. Un bug introduce regresión en el 100% del flujo de aprendizaje. La refactorización es la única mitigación. |
+| ID    | Riesgo                                     | Tipo                   | Descripción                                                                                                                                                 |
+| ----- | ------------------------------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RS-01 | Datos corruptos acumulados                 | Técnico / Producto     | Cada día sin F1-01 agrega más historial falso en Oracle. Los promedios del Dashboard empeorarán progresivamente hasta que se corrijan los datos históricos. |
+| RS-02 | API keys comprometidas                     | Seguridad              | `PKG_SERVICIOS_IA.sql` tiene las claves activas en el repositorio. Si fue expuesto, el costo puede ser ilimitado.                                           |
+| RS-03 | Backend sin autenticación en producción    | Seguridad / Financiero | Un script puede vaciar la cuota de OpenAI/Azure en horas. Cada petición a `/chat/message` cuesta dinero real.                                               |
+| RS-04 | TutorChat.jsx como single point of failure | Técnico                | 785 líneas. Un bug introduce regresión en el 100% del flujo de aprendizaje. La refactorización es la única mitigación.                                      |
 
 ### Media Prioridad
 
-| ID | Riesgo | Tipo | Descripción |
-|---|---|---|---|
-| RS-05 | Oracle ORDS directamente expuesto | Seguridad / Arquitectura | Cualquier usuario autenticado puede manipular `id_inscripcion` y acceder o modificar datos de otro estudiante. |
-| RS-06 | `recognize_once()` Azure bloquea el event loop | Escalabilidad | Una evaluación de pronunciación bloquea FastAPI para todos los usuarios durante ~3 segundos. Con 5 usuarios simultáneos, el sistema se degrada. |
-| RS-07 | Historial de conversación sin paginación | Escalabilidad | `GET /chat/history` retorna todos los mensajes. Misiones de 30+ mensajes generan payloads grandes y tiempos de carga crecientes. |
-| RS-08 | Dependencia de desarrollador único | Producto | Todo el conocimiento del sistema está centralizado. Sin documentación técnica activa, la salida del desarrollador sería crítica. |
+| ID    | Riesgo                                         | Tipo                     | Descripción                                                                                                                                     |
+| ----- | ---------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| RS-05 | Oracle ORDS directamente expuesto              | Seguridad / Arquitectura | Cualquier usuario autenticado puede manipular `id_inscripcion` y acceder o modificar datos de otro estudiante.                                  |
+| RS-06 | `recognize_once()` Azure bloquea el event loop | Escalabilidad            | Una evaluación de pronunciación bloquea FastAPI para todos los usuarios durante ~3 segundos. Con 5 usuarios simultáneos, el sistema se degrada. |
+| RS-07 | Historial de conversación sin paginación       | Escalabilidad            | `GET /chat/history` retorna todos los mensajes. Misiones de 30+ mensajes generan payloads grandes y tiempos de carga crecientes.                |
+| RS-08 | Dependencia de desarrollador único             | Producto                 | Todo el conocimiento del sistema está centralizado. Sin documentación técnica activa, la salida del desarrollador sería crítica.                |
 
 ### Baja Prioridad
 
-| ID | Riesgo | Tipo | Descripción |
-|---|---|---|---|
-| RS-09 | Sin TypeScript | Mantenibilidad | Los errores de contrato entre componentes se detectan en runtime, no en compilación. |
-| RS-10 | Mezcla de fetch y axios | Mantenibilidad | Configuración inconsistente de HTTP entre servicios. Timeout, auth headers y error handling se definen en múltiples lugares. |
-| RS-11 | Período académico como control de acceso | Producto | Si el período vence durante un piloto, todos los estudiantes pierden acceso sin aviso. La app no comunica esto claramente. |
+| ID    | Riesgo                                   | Tipo           | Descripción                                                                                                                  |
+| ----- | ---------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| RS-09 | Sin TypeScript                           | Mantenibilidad | Los errores de contrato entre componentes se detectan en runtime, no en compilación.                                         |
+| RS-10 | Mezcla de fetch y axios                  | Mantenibilidad | Configuración inconsistente de HTTP entre servicios. Timeout, auth headers y error handling se definen en múltiples lugares. |
+| RS-11 | Período académico como control de acceso | Producto       | Si el período vence durante un piloto, todos los estudiantes pierden acceso sin aviso. La app no comunica esto claramente.   |
 
 ---
 
@@ -638,38 +788,46 @@ Requiere que el producto esté en producción real con al menos una institución
 ### Evolución por componente
 
 **React Frontend**
+
 - Fase 1: Correcciones de datos y store limpio
 - Fase 2: 6 páginas completas, Zustand centralizado, hooks extraídos, axios unificado, variables de entorno
 - Fase 3: Componentes de Speaking Challenges, visualización fonémica, Teacher Dashboard (si aplica rol)
 
 **Backend Python (FastAPI)**
+
 - Fase 1: Eliminar router duplicado, actualizar contrato de `/chat/message` con `history` y `grammar_score` calculado
 - Fase 2: Middleware de autenticación (API key), rate limiting (slowapi), endpoint de progreso para `history`
 - Fase 3: ~10 endpoints proxy para Oracle ORDS, autenticación por rol (ESTUDIANTE/ACADEMICO), `recognize_once()` convertido a async con `run_in_executor`
 
 **Oracle Database y ORDS**
+
 - Fase 1: Modificar `POST /chat/message` para incluir `CORRECTION`, rotar API keys en `PKG_SERVICIOS_IA`
 - Fase 2: Actualizar `PKG_AUTH` con lógica de streak, agregar campo `OBJECTIVES` a MISSIONS si se requiere
 - Fase 3: `SPEAKING_ANALYSIS` poblada desde el pipeline de pronunciación, nuevos endpoints ORDS para Teacher Dashboard, restricción de acceso en ORDS a solo FastAPI
 
 **Integración de IA — Tutor Conversacional**
+
 - Fase 1: Historial de 8 mensajes en cada petición a GPT
 - Fase 2: Sin cambios al modelo
 - Fase 3: Adaptive Learning — el system prompt incluye el perfil de desempeño del estudiante (grammar/pronunciation histórico) para ajustar la dificultad
 
 **Integración de IA — Pronunciación**
+
 - Fase 1: Sin cambios
 - Fase 2: Sin cambios
 - Fase 3: `azure_pronunciation.py` devuelve datos por palabra (`NBest[0].Words`), `SPEAKING_ANALYSIS` poblada, `recognize_once()` convertido a async
 
 **WhatsApp Integration**
+
 - Fases 1-3: Descartada temporalmente. El producto web debe estar completo y en producción real antes de añadir un canal adicional.
 
 **Tutor Humano**
+
 - Fases 1-2: Solo la tabla `ACADEMICOS` como base para el Teacher Dashboard
 - Fase 3: Teacher Dashboard básico que permite al académico ver el progreso de sus estudiantes y potencialmente enviar mensajes de seguimiento
 
 **Analítica Educativa**
+
 - Fase 1: Datos reales en `USER_PROGRESS` como foundation
 - Fase 2: Páginas `/progress` y `/profile` como primera capa de analítica personal
 - Fase 3: Teacher Dashboard como capa de analítica grupal. `SPEAKING_ANALYSIS` con datos fonéticos. Base para predicción de riesgo académico en Fase 4.

@@ -14,7 +14,7 @@ import {
 
 import MainLayout from "../layouts/MainLayout";
 import useAuthStore from "../store/authStore";
-import { getDashboardStats } from "../services/dashboardService";
+import useStatsStore from "../store/useStatsStore";
 
 function scoreColor(value) {
   if (value == null) return "text-zinc-500";
@@ -71,25 +71,27 @@ export default function Profile() {
   const student = useAuthStore((state) => state.student);
   const inscripcion = useAuthStore((state) => state.inscripcion);
 
+  const stats      = useStatsStore((state) => state.stats);
+  const fetchStats = useStatsStore((state) => state.fetchStats);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState(null);
 
   useEffect(() => {
+    if (!inscripcion) return;
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        const data = await getDashboardStats(inscripcion.idInscripcion);
-        setStats(data);
+        await fetchStats(inscripcion.idInscripcion);
       } catch (err) {
         setError(err.message || "Could not load profile data.");
       } finally {
         setLoading(false);
       }
     }
-    if (inscripcion) load();
-  }, [inscripcion]);
+    load();
+  }, [inscripcion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!student || !inscripcion) {
     return (
@@ -233,7 +235,7 @@ export default function Profile() {
         <StatCard
           icon={Flame}
           label="Current Streak"
-          value={`${student.streakDays ?? 0} days`}
+          value={`${stats?.current_streak ?? 0} days`}
         />
         <StatCard
           icon={Clock}

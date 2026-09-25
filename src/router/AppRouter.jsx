@@ -6,8 +6,10 @@ import Library from "../pages/Library";
 import Progress from "../pages/Progress";
 import Profile from "../pages/Profile";
 import MissionPage from "../pages/MissionPage";
+import MissionContentEditor from "../pages/MissionContentEditor";
 import { AnimatePresence } from "framer-motion";
 import ProtectedRoute from "../routes/ProtectedRoute";
+import AdminRoute from "../routes/AdminRoute";
 import ToastContainer from "../components/ui/ToastContainer";
 
 export default function AppRouter() {
@@ -17,6 +19,7 @@ export default function AppRouter() {
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<LoginPage />} />
+
           <Route
             path="/dashboard"
             element={
@@ -59,6 +62,15 @@ export default function AppRouter() {
               <ProtectedRoute>
                 <MissionPage />
               </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/content"
+            element={
+              <AdminRoute>
+                <MissionContentEditor />
+              </AdminRoute>
             }
           />
         </Routes>
