@@ -140,7 +140,7 @@ export default function PracticeZone({
           onClick={() => onComplete(0)}
           className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-4 rounded-2xl transition-colors"
         >
-          Continuar al Chat →
+          Continuar a Pronunciación →
         </button>
       </div>
     );
@@ -150,7 +150,7 @@ export default function PracticeZone({
     return (
       <div className="bg-zinc-900 rounded-3xl p-8 flex flex-col items-center gap-4 text-center">
         <Loader2 size={32} className="text-cyan-500 animate-spin" />
-        <p className="text-zinc-400 text-sm">Generando actividades con IA...</p>
+        <p className="text-zinc-400 text-sm">Cargando ejercicios...</p>
       </div>
     );
   }
@@ -162,14 +162,14 @@ export default function PracticeZone({
         <div>
           <p className="text-white font-semibold">No se pudieron cargar las actividades</p>
           <p className="text-zinc-400 text-sm mt-1">
-            Puedes continuar directamente al chat con el tutor.
+            Puedes continuar directamente a la pronunciación.
           </p>
         </div>
         <button
           onClick={() => onComplete(0)}
           className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-4 rounded-2xl transition-colors"
         >
-          Ir al Chat →
+          Ir a Pronunciación →
         </button>
       </div>
     );
@@ -199,13 +199,13 @@ export default function PracticeZone({
 
         <p className="text-zinc-300 text-sm">
           {passed
-            ? "¡Buen trabajo! Estás listo para conversar con el tutor."
-            : "Sigue practicando. El tutor te ayudará con lo que no quedó claro."}
+            ? "¡Buen trabajo! Estás listo para practicar tu pronunciación."
+            : "Sigue practicando. En la conversación, el tutor te ayudará con lo que no quedó claro."}
         </p>
 
         {isCompleted && (
           <p className="text-zinc-500 text-xs">
-            Ya completaste esta sección. Puedes repasar aquí o continuar al chat.
+            Ya completaste esta sección. Puedes repasar aquí o continuar a la pronunciación.
           </p>
         )}
 
@@ -213,7 +213,7 @@ export default function PracticeZone({
           onClick={() => onComplete(averageScore)}
           className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-4 rounded-2xl transition-colors"
         >
-          Continuar al Chat →
+          Continuar a Pronunciación →
         </button>
       </motion.div>
     );

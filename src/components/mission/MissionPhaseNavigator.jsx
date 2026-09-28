@@ -4,8 +4,8 @@ import { BookOpen, Zap, MessageCircle, Mic, Trophy, Check } from "lucide-react";
 const PHASES = [
   { key: "learning",     label: "Aprendizaje",  icon: BookOpen },
   { key: "practice",     label: "Práctica",      icon: Zap },
-  { key: "conversation", label: "Conversación",  icon: MessageCircle },
   { key: "assessment",   label: "Pronunciación", icon: Mic },
+  { key: "conversation", label: "Conversación",  icon: MessageCircle },
   { key: "completion",   label: "Completada",    icon: Trophy },
 ];
 

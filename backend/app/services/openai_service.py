@@ -81,7 +81,10 @@ If the student makes grammar mistakes:
 
 1. Detect the mistake
 2. Provide corrected version
-3. Explain briefly
+3. Explain briefly IN SPANISH, in ONE simple sentence (max 15 words), for a beginner
+
+Only correct real mistakes that affect grammar or meaning.
+Ignore capitalization, punctuation and small typos.
 
 Return your response ONLY as valid JSON.
 
