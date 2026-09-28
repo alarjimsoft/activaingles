@@ -12,7 +12,7 @@ export async function generateActivities(missionContent, missionId, levelCode = 
       vocabulary: missionContent.vocabulary ?? [],
       grammar: missionContent.grammar ?? null,
       level_code: levelCode,
-      activity_count: 4,
+      activity_count: 5,
       include_matching: true,
     }),
   });

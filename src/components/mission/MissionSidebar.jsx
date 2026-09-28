@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 const PHASE_META = {
   learning:     { label: "Aprendizaje",  step: 1 },
   practice:     { label: "Práctica",     step: 2 },
-  conversation: { label: "Conversación", step: 3 },
-  assessment:   { label: "Pronunciación",step: 4 },
+  assessment:   { label: "Pronunciación",step: 3 },
+  conversation: { label: "Conversación", step: 4 },
   completion:   { label: "Completada",   step: 5 },
 };
 

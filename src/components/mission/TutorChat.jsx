@@ -278,7 +278,7 @@ export default function TutorChat({
           /*
             Send message
           */
-          sendTranscriptMessage(transcript, pronunciationData);
+          sendTranscriptMessage(transcript);
 
           setInput("");
         } catch (error) {
@@ -333,7 +333,7 @@ export default function TutorChat({
   /*
     Send transcript message
   */
-  const sendTranscriptMessage = async (transcript, pronunciationData) => {
+  const sendTranscriptMessage = async (transcript) => {
     if (!transcript.trim()) return;
 
     const userMessage = {
@@ -447,8 +447,6 @@ export default function TutorChat({
           Math.min(180, Math.max(1, sessionElapsedMinutes)),
 
         grammarScore: result.grammar_score ?? 90,
-
-        pronunciationScore: pronunciationData?.pronunciation_score || undefined,
       });
 
       console.log(tutorMessage);
@@ -691,145 +689,35 @@ export default function TutorChat({
         <div ref={messagesEndRef}></div>
       </div>
 
-      {/* Pronunciation Scores */}
+      {/* Pronunciación del mensaje de voz: un solo puntaje */}
       {pronunciationResult && (
-        <div
-          className="
-              mx-4
-              mb-4
-              bg-zinc-900
-              border border-cyan-500/30
-              rounded-2xl
-              p-4
-            "
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-cyan-400 font-bold">
-              Pronunciation Assessment
-            </h3>
-
-            <span
-              className="
-                  text-xs
-                  bg-cyan-500/20
-                  text-cyan-300
-                  px-2
-                  py-1
-                  rounded-lg
-                "
-            >
-              AI Speech Analysis
+        <div className="mx-4 mb-4 bg-zinc-900 border border-cyan-500/30 rounded-2xl px-4 py-3 flex items-center gap-3">
+          <Mic size={16} className="text-cyan-400 shrink-0" />
+          <p className="text-sm text-zinc-300">
+            Pronunciación:{" "}
+            <span className="text-cyan-400 font-semibold">
+              {Math.round(pronunciationResult.pronunciation_score)} / 100
             </span>
-          </div>
-
-          <div className="space-y-3">
-            {/* Pronunciation */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-zinc-300">Pronunciation</span>
-
-                <span className="text-cyan-400 font-semibold">
-                  {Math.round(pronunciationResult.pronunciation_score)}
-                </span>
-              </div>
-
-              <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="
-                      bg-cyan-400
-                      h-2
-                      rounded-full
-                    "
-                  style={{
-                    width: `${pronunciationResult.pronunciation_score}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Accuracy */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-zinc-300">Accuracy</span>
-
-                <span className="text-cyan-400 font-semibold">
-                  {Math.round(pronunciationResult.accuracy_score)}
-                </span>
-              </div>
-
-              <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="
-                      bg-green-400
-                      h-2
-                      rounded-full
-                    "
-                  style={{
-                    width: `${pronunciationResult.accuracy_score}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Fluency */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-zinc-300">Fluency</span>
-
-                <span className="text-cyan-400 font-semibold">
-                  {Math.round(pronunciationResult.fluency_score)}
-                </span>
-              </div>
-
-              <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="
-                      bg-yellow-400
-                      h-2
-                      rounded-full
-                    "
-                  style={{
-                    width: `${pronunciationResult.fluency_score}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Completeness */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-zinc-300">Completeness</span>
-
-                <span className="text-cyan-400 font-semibold">
-                  {Math.round(pronunciationResult.completeness_score)}
-                </span>
-              </div>
-
-              <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="
-                      bg-purple-400
-                      h-2
-                      rounded-full
-                    "
-                  style={{
-                    width: `${pronunciationResult.completeness_score}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+            <span className="text-zinc-400">
+              {" · "}
+              {pronunciationResult.pronunciation_score >= 80
+                ? "¡Muy bien!"
+                : pronunciationResult.pronunciation_score >= 60
+                ? "Bien, sigue practicando."
+                : "Inténtalo más despacio."}
+            </span>
+          </p>
         </div>
       )}
 
-      {/* Conversation complete — advance to assessment */}
+      {/* Conversación completa — última fase antes de terminar la misión */}
       {conversationComplete && onComplete && (
         <div className="px-5 pb-2">
           <button
             onClick={onComplete}
             className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-3 rounded-2xl transition-colors"
           >
-            Ir a Pronunciación →
+            Completar Misión →
           </button>
         </div>
       )}

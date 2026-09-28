@@ -16,8 +16,8 @@ import PracticeZone from "../components/mission/PracticeZone";
 import PronunciationAssessment from "../components/mission/PronunciationAssessment";
 import CompletionScreen from "../components/mission/CompletionScreen";
 
-const PHASE_ORDER   = ["learning", "practice", "conversation", "assessment", "completion"];
-const PHASE_WEIGHTS = { learning: 20, practice: 20, conversation: 40, assessment: 20 };
+const PHASE_ORDER   = ["learning", "practice", "assessment", "conversation", "completion"];
+const PHASE_WEIGHTS = { learning: 20, practice: 20, assessment: 20, conversation: 40 };
 
 export default function MissionPage() {
   const { id } = useParams();
@@ -71,7 +71,14 @@ export default function MissionPage() {
         }
 
         // 3. Determine starting phase — siempre desde learning
-        if (phaseStatus?.current_phase) {
+        // Misiones iniciadas con el orden anterior (conversación antes que pronunciación):
+        // si está en conversación sin haber hecho pronunciación, se lleva a pronunciación.
+        if (
+          phaseStatus?.current_phase === "conversation" &&
+          phaseStatus?.assessment_completed === "N"
+        ) {
+          setCurrentPhase("assessment");
+        } else if (phaseStatus?.current_phase) {
           setCurrentPhase(phaseStatus.current_phase);
         } else {
           setCurrentPhase("learning");

@@ -110,7 +110,7 @@ Generate exactly {activity_count} practice activities. Return a JSON object with
       "type": "fill_blank",
       "prompt": "She [___] studying English right now.",
       "correct_answer": "is",
-      "hint": "Use the verb BE",
+      "hint": "Usa el verbo BE",
       "difficulty": "easy"
     }},
     {{
@@ -119,7 +119,7 @@ Generate exactly {activity_count} practice activities. Return a JSON object with
       "prompt": "Which sentence uses the correct grammar?",
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correct_answer": "Option C",
-      "hint": "Think about the rule",
+      "hint": "Piensa en la regla gramatical",
       "difficulty": "medium"
     }},
     {{
@@ -127,7 +127,7 @@ Generate exactly {activity_count} practice activities. Return a JSON object with
       "type": "translation",
       "prompt": "Ella está estudiando inglés en este momento.",
       "correct_answer": "She is studying English right now.",
-      "hint": "Use present continuous",
+      "hint": "Usa el presente continuo",
       "difficulty": "medium"
     }}{matching_example}
   ]
@@ -140,6 +140,7 @@ Rules:
 - For translation: prompt is in Spanish, correct_answer is in English
 - Use vocabulary words from the list in at least 2 activities
 - difficulty must be one of: "easy", "medium", "hard"
+- hint must ALWAYS be written in Spanish: short and simple, without giving away the answer
 - Keep language appropriate for {level_code} level
 - All correct_answer values must be unambiguous{matching_rules}
 """
