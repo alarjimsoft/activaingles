@@ -34,7 +34,21 @@ const EMPTY_VOCAB = {
   definition: "",
   example: "",
   part_of_speech: "",
+  category: "",
 };
+
+// Categorías ya usadas en la misión, sin repetir (ignora mayúsculas/minúsculas)
+function vocabularyCategories(vocabulary) {
+  const seen = new Map();
+  vocabulary.forEach((v) => {
+    const name = v.category?.trim();
+    if (!name) return;
+    const key = name.toLowerCase();
+    if (!seen.has(key)) seen.set(key, { name, count: 0 });
+    seen.get(key).count += 1;
+  });
+  return [...seen.values()];
+}
 
 const EMPTY_GRAMMAR = {
   title: "",
@@ -123,20 +137,46 @@ function VocabularyEditor({ vocabulary, onChange }) {
     onChange(next);
   }
 
+  // La palabra nueva hereda la categoría de la anterior para capturar grupos más rápido
   function add() {
-    onChange([...vocabulary, { ...EMPTY_VOCAB }]);
+    const lastCategory = vocabulary[vocabulary.length - 1]?.category ?? "";
+    onChange([...vocabulary, { ...EMPTY_VOCAB, category: lastCategory }]);
   }
 
   function remove(i) {
     onChange(vocabulary.filter((_, idx) => idx !== i));
   }
 
+  const categories = vocabularyCategories(vocabulary);
+
   return (
     <div className="space-y-4">
       <p className="text-zinc-400 text-sm">
         Vocabulario clave de la misión. Los ejemplos deben estar en inglés; las
-        definiciones pueden ser en español.
+        definiciones pueden ser en español. Usa la categoría para agrupar
+        palabras (por ejemplo: Profesiones, Frutas); el estudiante las verá por
+        grupo.
       </p>
+
+      {categories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-zinc-500 text-xs">Categorías en esta misión:</span>
+          {categories.map((c) => (
+            <span
+              key={c.name}
+              className="text-xs bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 px-2.5 py-1 rounded-full"
+            >
+              {c.name} <span className="text-zinc-500">{c.count}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <datalist id="vocabulary-categories">
+        {categories.map((c) => (
+          <option key={c.name} value={c.name} />
+        ))}
+      </datalist>
 
       {vocabulary.map((v, i) => (
         <div
@@ -173,6 +213,15 @@ function VocabularyEditor({ vocabulary, onChange }) {
               className="bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
+
+          <input
+            type="text"
+            list="vocabulary-categories"
+            value={v.category ?? ""}
+            onChange={(e) => update(i, "category", e.target.value)}
+            placeholder="Categoría (elige una o escribe una nueva, ej: Profesiones)"
+            className="w-full bg-zinc-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          />
 
           <input
             type="text"
