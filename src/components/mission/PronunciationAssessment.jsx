@@ -8,7 +8,6 @@ import { updateProgress } from "../../services/progressService";
 
 const PHRASE_COUNT  = 6;
 const MAX_ATTEMPTS  = 2; // por frase
-const PHASE_WEIGHT  = 20;
 
 const FALLBACK_PHRASES = [
   "Hello, my name is Anna.",
@@ -60,6 +59,7 @@ export default function PronunciationAssessment({
   missionContent = null,
   missionId,
   baseProgress = 40,
+  phaseWeight = 20,
   onComplete,
   setProgress,
 }) {
@@ -141,7 +141,7 @@ export default function PronunciationAssessment({
   }
 
   async function handleComplete() {
-    const progressPercent = baseProgress + PHASE_WEIGHT;
+    const progressPercent = Math.round(baseProgress + phaseWeight);
     setSaving(true);
     if (inscripcion) {
       try {

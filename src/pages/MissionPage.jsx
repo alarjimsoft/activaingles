@@ -14,10 +14,15 @@ import MissionPhaseNavigator from "../components/mission/MissionPhaseNavigator";
 import LearningGuide from "../components/mission/LearningGuide";
 import PracticeZone from "../components/mission/PracticeZone";
 import PronunciationAssessment from "../components/mission/PronunciationAssessment";
+import SpellingAssessment from "../components/mission/SpellingAssessment";
 import CompletionScreen from "../components/mission/CompletionScreen";
-
-const PHASE_ORDER   = ["learning", "practice", "assessment", "conversation", "completion"];
-const PHASE_WEIGHTS = { learning: 20, practice: 20, assessment: 20, conversation: 40 };
+import {
+  DEFAULT_PHASES,
+  getMissionPhases,
+  getAssessmentType,
+  getPhaseWeights,
+  resolvePhase,
+} from "../config/missionPhases";
 
 export default function MissionPage() {
   const { id } = useParams();
@@ -73,16 +78,17 @@ export default function MissionPage() {
         // 3. Determine starting phase — siempre desde learning
         // Misiones iniciadas con el orden anterior (conversación antes que pronunciación):
         // si está en conversación sin haber hecho pronunciación, se lleva a pronunciación.
+        let startPhase = "learning";
         if (
           phaseStatus?.current_phase === "conversation" &&
           phaseStatus?.assessment_completed === "N"
         ) {
-          setCurrentPhase("assessment");
+          startPhase = "assessment";
         } else if (phaseStatus?.current_phase) {
-          setCurrentPhase(phaseStatus.current_phase);
-        } else {
-          setCurrentPhase("learning");
+          startPhase = phaseStatus.current_phase;
         }
+        // Si la misión no tiene esa fase (p. ej. práctica en la misión 3), la siguiente que sí tenga
+        setCurrentPhase(resolvePhase(startPhase, getMissionPhases(resolvedMission.id)));
       } catch (error) {
         console.error(error);
         setCurrentPhase("conversation"); // fallback seguro
@@ -94,12 +100,15 @@ export default function MissionPage() {
     initialize();
   }, [id, inscripcion]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const phases       = mission ? getMissionPhases(mission.id) : DEFAULT_PHASES;
+  const phaseWeights = getPhaseWeights(phases);
+
   const completedPhases = currentPhase
-    ? PHASE_ORDER.slice(0, PHASE_ORDER.indexOf(currentPhase))
+    ? phases.slice(0, phases.indexOf(currentPhase))
     : [];
 
   const baseProgress = completedPhases.reduce(
-    (sum, p) => sum + (PHASE_WEIGHTS[p] ?? 0),
+    (sum, p) => sum + (phaseWeights[p] ?? 0),
     0,
   );
 
@@ -109,10 +118,11 @@ export default function MissionPage() {
 
   const advancePhase = useCallback(
     async (completedPhase, metadata = {}) => {
-      const nextIdx = PHASE_ORDER.indexOf(completedPhase) + 1;
-      if (nextIdx >= PHASE_ORDER.length) return;
+      const missionPhases = getMissionPhases(mission.id);
+      const nextIdx = missionPhases.indexOf(completedPhase) + 1;
+      if (nextIdx >= missionPhases.length) return;
 
-      const nextPhase = PHASE_ORDER[nextIdx];
+      const nextPhase = missionPhases[nextIdx];
       setCurrentPhase(nextPhase);
 
       const payload = {
@@ -160,6 +170,7 @@ export default function MissionPage() {
       </div>
 
       <MissionPhaseNavigator
+        phases={phases}
         currentPhase={currentPhase}
         completedPhases={completedPhases}
         onPhaseClick={goToPhase}
@@ -172,6 +183,7 @@ export default function MissionPage() {
             mission={mission}
             progress={progress}
             currentPhase={currentPhase}
+            phases={phases}
             missionContent={missionContent}
           />
         </div>
@@ -207,11 +219,23 @@ export default function MissionPage() {
             />
           )}
 
-          {currentPhase === "assessment" && (
+          {currentPhase === "assessment" && getAssessmentType(mission.id) === "spelling" && (
+            <SpellingAssessment
+              missionContent={missionContent}
+              missionId={mission.id}
+              baseProgress={baseProgress}
+              phaseWeight={phaseWeights.assessment}
+              setProgress={setProgress}
+              onComplete={() => advancePhase("assessment")}
+            />
+          )}
+
+          {currentPhase === "assessment" && getAssessmentType(mission.id) === "pronunciation" && (
             <PronunciationAssessment
               missionContent={missionContent}
               missionId={mission.id}
               baseProgress={baseProgress}
+              phaseWeight={phaseWeights.assessment}
               setProgress={setProgress}
               onComplete={() => advancePhase("assessment")}
             />
@@ -220,6 +244,7 @@ export default function MissionPage() {
           {currentPhase === "completion" && (
             <CompletionScreen
               mission={mission}
+              phases={phases}
               practiceScore={practiceScore}
             />
           )}

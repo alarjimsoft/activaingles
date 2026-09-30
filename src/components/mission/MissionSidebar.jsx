@@ -1,19 +1,21 @@
 import { Target, BookOpen, Trophy, BookMarked } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const PHASE_META = {
-  learning:     { label: "Aprendizaje",  step: 1 },
-  practice:     { label: "Práctica",     step: 2 },
-  assessment:   { label: "Pronunciación",step: 3 },
-  conversation: { label: "Conversación", step: 4 },
-  completion:   { label: "Completada",   step: 5 },
+import { DEFAULT_PHASES } from "../../config/missionPhases";
+
+const PHASE_LABELS = {
+  learning:     "Aprendizaje",
+  practice:     "Práctica",
+  assessment:   "Pronunciación",
+  conversation: "Conversación",
+  completion:   "Completada",
 };
 
-const TOTAL_PHASES = 5;
-
-export default function MissionSidebar({ mission, progress = 0, currentPhase, missionContent }) {
+export default function MissionSidebar({ mission, progress = 0, currentPhase, phases = DEFAULT_PHASES, missionContent }) {
   const hasContent = !!missionContent;
-  const phase      = currentPhase ? PHASE_META[currentPhase] : null;
+  const phase      = currentPhase
+    ? { label: PHASE_LABELS[currentPhase], step: phases.indexOf(currentPhase) + 1 }
+    : null;
 
   const objectives =
     hasContent && missionContent.objectives?.length > 0
@@ -50,7 +52,7 @@ export default function MissionSidebar({ mission, progress = 0, currentPhase, mi
             </p>
             <p className="text-white font-semibold">{phase.label}</p>
             <p className="text-zinc-500 text-xs mt-0.5">
-              Paso {phase.step} de {TOTAL_PHASES}
+              Paso {phase.step} de {phases.length}
             </p>
           </motion.div>
         </AnimatePresence>
