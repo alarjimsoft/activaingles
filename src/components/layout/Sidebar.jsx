@@ -8,6 +8,7 @@ import {
   BookOpen,
   Menu,
   X,
+  Download,
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
@@ -19,6 +20,8 @@ import { useEffect, useState } from "react";
 import useAuthStore from "../../store/authStore";
 
 import useStatsStore from "../../store/useStatsStore";
+
+import useInstallPrompt from "../../hooks/useInstallPrompt";
 
 const studentMenuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -44,6 +47,7 @@ export default function Sidebar() {
   const fetchStats = useStatsStore((state) => state.fetchStats);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const { canInstall, install } = useInstallPrompt();
 
   const isAcademico = userType === "academico";
   const menuItems = isAcademico ? academicoMenuItems : studentMenuItems;
@@ -152,6 +156,17 @@ export default function Sidebar() {
               {stats?.avg_progress || 0}% completed
             </p>
           </div>
+        )}
+
+        {/* Instalar como app (solo si el navegador lo permite) */}
+        {canInstall && (
+          <button
+            onClick={install}
+            className="w-full mt-4 flex items-center justify-center gap-3 bg-cyan-500/10 hover:bg-cyan-500 border border-cyan-500/30 text-cyan-300 hover:text-black py-3 rounded-2xl transition-all"
+          >
+            <Download size={18} />
+            Instalar app
+          </button>
         )}
 
         {/* Logout Button */}
