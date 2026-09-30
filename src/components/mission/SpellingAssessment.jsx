@@ -4,6 +4,7 @@ import { Mic, RotateCcw, ArrowRight, Volume2, CheckCircle2, XCircle, SpellCheck 
 
 import useAuthStore from "../../store/authStore";
 import { evaluatePronunciation } from "../../services/pronunciationService";
+import { spellingToText } from "../../services/speechService";
 import { updateProgress } from "../../services/progressService";
 import { playText } from "../../services/ttsService";
 
@@ -68,25 +69,42 @@ function pickWords(missionContent) {
 
 const spelled = (word) => word.toUpperCase().split("").join("-");
 
-// Azure compara contra las letras esperadas y devuelve las letras que reconoció
-function gradeSpelling(target, result) {
-  const heard   = (result?.recognized_text ?? "").toUpperCase().replace(/[^A-Z]/g, "");
-  const clarity = Math.round(result?.pronunciation_score ?? 0);
-
-  if (!result?.success || !heard) {
+// Dos señales:
+// - Google (sin conocer la palabra) dice QUÉ letras se dijeron. Azure con la palabra
+//   como referencia tiende a "escuchar" la correcta (FA-C-HER pasaba como FATHER).
+// - Azure (con las letras como referencia) confirma que se DELETREÓ: si el estudiante
+//   dice la palabra completa, Google la transcribe igual ("father") pero Azure da muy bajo.
+// azure = null si su llamada falló: no se bloquea al estudiante por eso.
+function gradeSpelling(target, heard, azure) {
+  if (!heard) {
     return { correct: false, score: 0, heard: "", message: "No te escuchamos bien. Di cada letra despacio." };
   }
+
   if (heard === target) {
-    return {
-      correct: true,
-      score: clarity,
-      heard,
-      message: clarity >= 80
-        ? "¡Muy bien! Lo deletreaste correctamente."
-        : "¡Correcto! Intenta decir cada letra un poco más claro.",
-    };
+    const spelledOut =
+      azure === null ||
+      (azure.success &&
+        ((azure.completeness_score ?? 0) >= 80 || (azure.pronunciation_score ?? 0) >= 80));
+
+    if (!spelledOut) {
+      return {
+        correct: false,
+        score: 0,
+        heard: "",
+        message: `Parece que dijiste la palabra completa. Deletréala letra por letra: ${spelled(target)}.`,
+      };
+    }
+    return { correct: true, score: 100, heard, message: "¡Muy bien! Lo deletreaste correctamente." };
   }
-  return { correct: false, score: Math.min(clarity, 50), heard, message: "Casi. Revisa las letras marcadas en rojo." };
+
+  // Puntaje parcial: letras en su lugar, máximo 60
+  const inPlace = [...target].filter((letter, i) => heard[i] === letter).length;
+  return {
+    correct: false,
+    score: Math.round((inPlace / Math.max(target.length, heard.length)) * 60),
+    heard,
+    message: "Casi. Revisa las letras marcadas en rojo.",
+  };
 }
 
 function LetterRow({ target, heard }) {
@@ -173,9 +191,12 @@ export default function SpellingAssessment({
       setPhase("evaluating");
 
       try {
-        // Referencia: las letras separadas ("T E A C H E R")
-        const result = await evaluatePronunciation(audioBlob, target.split("").join(" "));
-        const graded = gradeSpelling(target, result);
+        // En paralelo: letras dichas (Google) y confirmación de deletreo (Azure, letras separadas)
+        const [spelling, azure] = await Promise.all([
+          spellingToText(audioBlob),
+          evaluatePronunciation(audioBlob, target.split("").join(" ")).catch(() => null),
+        ]);
+        const graded = gradeSpelling(target, spelling.letters ?? "", azure);
         setAttempts((a) => a + 1);
         setFeedback(graded);
         setResults((prev) => {
