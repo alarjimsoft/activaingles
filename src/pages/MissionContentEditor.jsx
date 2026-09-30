@@ -19,6 +19,12 @@ import {
 import Sidebar from "../components/layout/Sidebar";
 
 import {
+  EMPTY_GRAMMAR_RULE,
+  readGrammarRules,
+  buildGrammar,
+} from "../utils/grammarRules";
+
+import {
   getAdminMissionList,
   getMissionContent,
   saveMissionContent,
@@ -50,14 +56,15 @@ function vocabularyCategories(vocabulary) {
   return [...seen.values()];
 }
 
-const EMPTY_GRAMMAR = {
-  title: "",
-  rule: "",
-  explanation: "",
-  dos: [""],
-  donts: [""],
-  note: "",
-};
+// Regla lista para editar: listas con al menos una casilla
+function editableRule(rule = {}) {
+  return {
+    ...EMPTY_GRAMMAR_RULE,
+    ...rule,
+    dos: rule.dos?.length > 0 ? rule.dos : [""],
+    donts: rule.donts?.length > 0 ? rule.donts : [""],
+  };
+}
 
 const EMPTY_EXAMPLE = { phrase: "", context: "", response: "" };
 
@@ -65,7 +72,7 @@ function emptyContent() {
   return {
     objectives: [""],
     vocabulary: [{ ...EMPTY_VOCAB }],
-    grammar: { ...EMPTY_GRAMMAR, dos: [""], donts: [""] },
+    grammarRules: [editableRule()],
     examples: [{ ...EMPTY_EXAMPLE }],
   };
 }
@@ -304,19 +311,75 @@ function StringListEditor({ items, onChange, placeholder, label }) {
   );
 }
 
-function GrammarEditor({ grammar, onChange }) {
+function GrammarRulesEditor({ rules, onChange }) {
+  function update(i, rule) {
+    onChange(rules.map((r, idx) => (idx === i ? rule : r)));
+  }
+
+  function add() {
+    onChange([...rules, { ...EMPTY_GRAMMAR_RULE, dos: [""], donts: [""] }]);
+  }
+
+  function remove(i) {
+    onChange(rules.filter((_, idx) => idx !== i));
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-zinc-400 text-sm">
+        Agrega una o varias reglas gramaticales. Cada regla en inglés; la
+        explicación puede ir en español con ejemplos en inglés. El estudiante
+        verá cada regla por separado.
+      </p>
+
+      {rules.map((rule, i) => (
+        <div
+          key={i}
+          className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-4 space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-cyan-400 text-xs font-semibold uppercase tracking-wider">
+              Regla {i + 1}
+              {rule.title?.trim() && (
+                <span className="text-zinc-400 normal-case tracking-normal font-normal">
+                  {" · "}
+                  {rule.title}
+                </span>
+              )}
+            </span>
+            {rules.length > 1 && (
+              <button
+                onClick={() => remove(i)}
+                className="text-zinc-600 hover:text-red-400 transition-colors"
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
+          </div>
+
+          <GrammarRuleFields grammar={rule} onChange={(r) => update(i, r)} />
+        </div>
+      ))}
+
+      <button
+        onClick={add}
+        className="flex items-center gap-2 text-cyan-500 hover:text-cyan-400 text-sm font-medium transition-colors"
+      >
+        <Plus size={16} />
+        Agregar regla gramatical
+      </button>
+    </div>
+  );
+}
+
+function GrammarRuleFields({ grammar, onChange }) {
   function update(field, val) {
     onChange({ ...grammar, [field]: val });
   }
 
   return (
     <div className="space-y-4">
-      <p className="text-zinc-400 text-sm">
-        Una sola regla gramatical por misión. La regla en inglés; la explicación
-        puede ir en español con ejemplos en inglés.
-      </p>
-
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="text-zinc-400 text-xs mb-1 block">
             Título de la regla
@@ -354,7 +417,7 @@ function GrammarEditor({ grammar, onChange }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StringListEditor
           items={grammar.dos}
           onChange={(val) => update("dos", val)}
@@ -510,7 +573,10 @@ export default function MissionContentEditor() {
           data.objectives.length > 0 ? data.objectives : [""],
         vocabulary:
           data.vocabulary.length > 0 ? data.vocabulary : [{ ...EMPTY_VOCAB }],
-        grammar: data.grammar ?? { ...EMPTY_GRAMMAR, dos: [""], donts: [""] },
+        grammarRules:
+          readGrammarRules(data.grammar).length > 0
+            ? readGrammarRules(data.grammar).map(editableRule)
+            : [editableRule()],
         examples:
           data.examples.length > 0 ? data.examples : [{ ...EMPTY_EXAMPLE }],
       });
@@ -528,7 +594,10 @@ export default function MissionContentEditor() {
     setSaveStatus(null);
 
     try {
-      await saveMissionContent(selectedMission.missionId, content);
+      await saveMissionContent(selectedMission.missionId, {
+        ...content,
+        grammar: buildGrammar(content.grammarRules),
+      });
       setSaveStatus("success");
 
       // Actualiza el badge hasContent en la lista local
@@ -760,10 +829,10 @@ export default function MissionContentEditor() {
                     />
                   )}
                   {activeTab === "grammar" && (
-                    <GrammarEditor
-                      grammar={content.grammar}
+                    <GrammarRulesEditor
+                      rules={content.grammarRules}
                       onChange={(v) =>
-                        setContent((c) => ({ ...c, grammar: v }))
+                        setContent((c) => ({ ...c, grammarRules: v }))
                       }
                     />
                   )}

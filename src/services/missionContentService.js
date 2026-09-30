@@ -1,4 +1,5 @@
 import { ORACLE_URL } from "../config/api";
+import { getGrammarRules } from "../utils/grammarRules";
 
 const ORACLE_BASE = ORACLE_URL;
 
@@ -18,11 +19,14 @@ export async function getMissionContent(missionId) {
       raw.grammar_json    || raw.examples_json;
     if (!hasContent) return null;
 
+    const grammar = raw.grammar_json ? JSON.parse(raw.grammar_json) : null;
+
     return {
       missionId: raw.mission_id,
       objectives: raw.objectives_json ? JSON.parse(raw.objectives_json) : [],
       vocabulary: raw.vocabulary_json ? JSON.parse(raw.vocabulary_json) : [],
-      grammar: raw.grammar_json ? JSON.parse(raw.grammar_json) : null,
+      grammar,
+      grammarRules: getGrammarRules(grammar),
       examples: raw.examples_json ? JSON.parse(raw.examples_json) : [],
       contentVersion: raw.content_version ?? 0,
     };

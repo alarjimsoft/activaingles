@@ -14,6 +14,8 @@ import { sendChatMessage } from "../../services/chatService";
 
 import CorrectionCard from "./CorrectionCard";
 
+import { grammarForAI } from "../../utils/grammarRules";
+
 import {
   startConversation,
   saveMessage,
@@ -46,7 +48,7 @@ export default function TutorChat({
 }) {
   const learningContext = missionContent ? {
     vocabulary:    missionContent.vocabulary ?? [],
-    grammar:       missionContent.grammar    ?? null,
+    grammar:       grammarForAI(missionContent.grammarRules),
     examples:      missionContent.examples   ?? [],
     practice_score: practiceScore,
   } : null;
@@ -616,8 +618,8 @@ export default function TutorChat({
             <h2 className="text-white text-xl font-bold">AI Tutor</h2>
 
             <p className="text-zinc-400 text-sm mb-4">
-              {missionContent?.grammar?.title
-                ? `Today's focus: ${missionContent.grammar.title}`
+              {missionContent?.grammarRules?.length > 0
+                ? `Today's focus: ${missionContent.grammarRules.map((r) => r.title).filter(Boolean).join(" · ")}`
                 : "Mission active"}
             </p>
 

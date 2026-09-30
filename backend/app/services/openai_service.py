@@ -5,6 +5,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import json
 
+from app.services.grammar_rules import grammar_rules
+
 load_dotenv()
 
 client = OpenAI(
@@ -35,14 +37,14 @@ def get_tutor_response(
     learning_section = ""
     if learning_context:
         vocab_terms = [w.get("term", "") for w in learning_context.get("vocabulary", [])]
-        grammar     = learning_context.get("grammar") or {}
+        rules       = grammar_rules(learning_context.get("grammar"))
         score       = learning_context.get("practice_score")
 
         learning_section = "\n\nLEARNING CONTEXT (student already studied this):\n"
         if vocab_terms:
             learning_section += f"Vocabulary: {', '.join(vocab_terms)}\n"
-        if grammar.get("title"):
-            learning_section += f"Grammar focus: {grammar['title']} — {grammar.get('rule', '')}\n"
+        for rule in rules:
+            learning_section += f"Grammar focus: {rule.get('title', '')} — {rule.get('rule', '')}\n"
         if score is not None:
             if score >= 75:
                 learning_section += f"Practice score: {score}% — Strong. Challenge them with complex sentences.\n"
