@@ -6,13 +6,15 @@ import {
   GraduationCap,
   LogOut,
   BookOpen,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { NavLink, useNavigate } from "react-router-dom";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import useAuthStore from "../../store/authStore";
 
@@ -41,6 +43,8 @@ export default function Sidebar() {
   const stats      = useStatsStore((state) => state.stats);
   const fetchStats = useStatsStore((state) => state.fetchStats);
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const isAcademico = userType === "academico";
   const menuItems = isAcademico ? academicoMenuItems : studentMenuItems;
 
@@ -62,11 +66,11 @@ export default function Sidebar() {
     ? (academico?.rol ?? "Académico")
     : student?.nivel ?? "A1";
 
-  return (
-    <aside className="w-72 min-h-screen bg-zinc-950 border-r border-zinc-800 flex flex-col px-6 py-8">
+  const logo = (
+    <>
       {/* Logo */}
       <motion.div
-        className="flex items-center gap-3 mb-12"
+        className="flex items-center gap-3"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
@@ -82,7 +86,11 @@ export default function Sidebar() {
           </p>
         </div>
       </motion.div>
+    </>
+  );
 
+  const menu = (
+    <>
       {/* Navigation */}
       <nav className="flex flex-col gap-3">
         {menuItems.map((item) => {
@@ -96,6 +104,7 @@ export default function Sidebar() {
             >
               <NavLink
                 to={item.path}
+                onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
                     isActive
@@ -154,6 +163,63 @@ export default function Sidebar() {
           Logout
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Celular y tablet: barra superior + menú deslizable */}
+      <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between bg-zinc-950 border-b border-zinc-800 px-4 py-3">
+        {logo}
+        <button
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menú"
+          className="p-2 rounded-xl text-zinc-300 hover:bg-zinc-900 hover:text-cyan-400"
+        >
+          <Menu size={24} />
+        </button>
+      </header>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div
+              key="overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMenuOpen(false)}
+              className="lg:hidden fixed inset-0 z-40 bg-black/60"
+            />
+            <motion.aside
+              key="drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "tween", duration: 0.25 }}
+              className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-zinc-950 border-r border-zinc-800 flex flex-col px-6 py-6 overflow-y-auto"
+            >
+              <div className="flex items-start justify-between mb-10">
+                {logo}
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  aria-label="Cerrar menú"
+                  className="p-2 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+              {menu}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Computadora: barra lateral fija, como siempre */}
+      <aside className="hidden lg:flex w-72 min-h-screen shrink-0 bg-zinc-950 border-r border-zinc-800 flex-col px-6 py-8">
+        <div className="mb-12">{logo}</div>
+        {menu}
+      </aside>
+    </>
   );
 }

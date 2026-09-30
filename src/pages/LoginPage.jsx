@@ -71,8 +71,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="bg-zinc-900 p-10 rounded-3xl w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-black flex items-center justify-center px-4">
+      <div className="bg-zinc-900 p-6 sm:p-10 rounded-3xl w-full max-w-md space-y-6">
         <h1 className="text-3xl text-white font-bold text-center">
           Activa Inglés
         </h1>

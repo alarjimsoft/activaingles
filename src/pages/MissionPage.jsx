@@ -154,9 +154,9 @@ export default function MissionPage() {
   return (
     <MainLayout>
       {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-white text-5xl font-bold">{mission.title}</h1>
-        <p className="text-zinc-400 mt-4 text-lg">{mission.description}</p>
+      <div className="mb-6 sm:mb-10">
+        <h1 className="text-white text-3xl sm:text-5xl font-bold">{mission.title}</h1>
+        <p className="text-zinc-400 mt-2 sm:mt-4 text-base sm:text-lg">{mission.description}</p>
       </div>
 
       <MissionPhaseNavigator
@@ -166,8 +166,8 @@ export default function MissionPage() {
       />
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
+        <div className="order-2 xl:order-1">
           <MissionSidebar
             mission={mission}
             progress={progress}
@@ -176,7 +176,7 @@ export default function MissionPage() {
           />
         </div>
 
-        <div className="xl:col-span-2">
+        <div className="order-1 xl:order-2 xl:col-span-2">
           {currentPhase === "learning" && (
             <LearningGuide
               missionContent={missionContent}

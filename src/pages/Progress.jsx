@@ -159,20 +159,20 @@ export default function Progress() {
     <MainLayout>
       {/* ── Header ─────────────────────────────────────────────────── */}
       <motion.div
-        className="flex items-center justify-between mb-12"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 sm:mb-12"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div>
-          <h1 className="text-white text-5xl font-bold">Learning Analytics</h1>
-          <p className="text-zinc-400 mt-4 text-lg">
+          <h1 className="text-white text-3xl sm:text-5xl font-bold">Learning Analytics</h1>
+          <p className="text-zinc-400 mt-2 sm:mt-4 text-base sm:text-lg">
             Tracking your English journey, {student.nombre}.
           </p>
         </div>
 
         {/* Level + XP badge */}
-        <div className="bg-zinc-900 border border-zinc-800 px-5 py-4 rounded-2xl min-w-55">
+        <div className="bg-zinc-900 border border-zinc-800 px-5 py-4 rounded-2xl sm:min-w-55">
           <p className="text-zinc-400 text-sm">Current Level</p>
           <h2 className="text-cyan-300 text-3xl font-extrabold mt-1">
             Level {stats?.level || 1}
