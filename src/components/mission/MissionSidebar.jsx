@@ -20,8 +20,13 @@ export default function MissionSidebar({ mission, progress = 0, currentPhase, mi
       ? missionContent.objectives
       : ["Complete the mission conversation", "Practice English expressions", "Improve grammar and vocabulary"];
 
-  const grammarTitle   = hasContent && missionContent.grammar?.title ? missionContent.grammar.title   : mission.grammarTitle;
-  const grammarExample = hasContent && missionContent.grammar?.rule  ? missionContent.grammar.rule    : mission.grammarExample;
+  const contentRules = hasContent ? missionContent.grammarRules ?? [] : [];
+  const grammarRules =
+    contentRules.length > 0
+      ? contentRules
+      : mission.grammarTitle || mission.grammarExample
+      ? [{ title: mission.grammarTitle, rule: mission.grammarExample }]
+      : [];
 
   const vocabReminder = hasContent ? (missionContent.vocabulary ?? []).slice(0, 4) : [];
 
@@ -65,19 +70,23 @@ export default function MissionSidebar({ mission, progress = 0, currentPhase, mi
       </div>
 
       {/* Gramática */}
-      {(grammarTitle || grammarExample) && (
+      {grammarRules.length > 0 && (
         <div>
           <div className="flex items-center gap-3 mb-4">
             <BookOpen className="text-violet-400" />
             <h3 className="text-white font-semibold">Grammar Focus</h3>
           </div>
-          <div className="bg-zinc-800 rounded-2xl p-4">
-            {grammarTitle && (
-              <p className="text-cyan-400 text-sm font-semibold">{grammarTitle}</p>
-            )}
-            {grammarExample && (
-              <p className="text-zinc-400 text-xs mt-2">{grammarExample}</p>
-            )}
+          <div className="space-y-2">
+            {grammarRules.map((rule, i) => (
+              <div key={i} className="bg-zinc-800 rounded-2xl p-4">
+                {rule.title && (
+                  <p className="text-cyan-400 text-sm font-semibold">{rule.title}</p>
+                )}
+                {rule.rule && (
+                  <p className="text-zinc-400 text-xs mt-2">{rule.rule}</p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

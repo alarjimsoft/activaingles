@@ -1,4 +1,5 @@
 import { API_URL, ORACLE_URL } from "../config/api";
+import { grammarForAI } from "../utils/grammarRules";
 
 const FASTAPI    = API_URL;
 const ORACLE_BASE = ORACLE_URL;
@@ -10,7 +11,7 @@ export async function generateActivities(missionContent, missionId, levelCode = 
     body: JSON.stringify({
       mission_id: missionId,
       vocabulary: missionContent.vocabulary ?? [],
-      grammar: missionContent.grammar ?? null,
+      grammar: grammarForAI(missionContent.grammarRules),
       level_code: levelCode,
       activity_count: 5,
       include_matching: true,

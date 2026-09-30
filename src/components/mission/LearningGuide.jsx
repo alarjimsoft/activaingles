@@ -102,7 +102,7 @@ export default function LearningGuide({ missionContent, onComplete, isCompleted 
               <VocabularyTab vocabulary={missionContent.vocabulary} />
             )}
             {activeTab === "grammar" && (
-              <GrammarTab grammar={missionContent.grammar} />
+              <GrammarTab rules={missionContent.grammarRules ?? []} />
             )}
             {activeTab === "examples" && (
               <ExamplesTab examples={missionContent.examples} />

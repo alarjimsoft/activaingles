@@ -4,6 +4,8 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from app.services.grammar_rules import grammar_rules
+
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -80,13 +82,12 @@ def generate_activities(
         for w in vocabulary[:8]
     )
 
-    grammar_info = ""
-    if grammar:
-        grammar_info = (
-            f"Title: {grammar.get('title', '')}\n"
-            f"Rule: {grammar.get('rule', '')}\n"
-            f"Explanation: {grammar.get('explanation', '')}"
-        )
+    grammar_info = "\n\n".join(
+        f"Title: {r.get('title', '')}\n"
+        f"Rule: {r.get('rule', '')}\n"
+        f"Explanation: {r.get('explanation', '')}"
+        for r in grammar_rules(grammar)
+    )
 
     matching_example = MATCHING_EXAMPLE if include_matching else ""
     matching_rules   = MATCHING_RULES if include_matching else ""
