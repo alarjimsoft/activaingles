@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import useAuthStore from "../store/authStore";
 
@@ -13,12 +13,19 @@ export default function LoginPage() {
 
   const login = useAuthStore((state) => state.login);
   const loginAcademicoStore = useAuthStore((state) => state.loginAcademico);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userType = useAuthStore((state) => state.userType);
 
   const [mode, setMode] = useState("student"); // 'student' | 'academico'
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Con sesión activa (por ejemplo al abrir la app instalada) se entra directo
+  if (isAuthenticated) {
+    return <Navigate to={userType === "academico" ? "/content" : "/dashboard"} replace />;
+  }
 
   function switchMode(newMode) {
     setMode(newMode);
