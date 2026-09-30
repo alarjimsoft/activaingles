@@ -12,9 +12,9 @@ export default function StatCard({
         backdrop-blur-xl
         border border-zinc-800
         rounded-3xl
-        p-6
+        p-4 sm:p-6
 
-        min-h-[150px]
+        min-h-[120px] sm:min-h-[150px]
 
         flex
         flex-col
@@ -43,7 +43,7 @@ export default function StatCard({
       <h2
         className="
          text-white
-         text-5xl
+         text-3xl sm:text-5xl
          font-black
          mt-3
          tracking-tight

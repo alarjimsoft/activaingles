@@ -73,15 +73,15 @@ export default function Dashboard() {
     <MainLayout>
       {/* Header */}
       <motion.div
-        className="flex items-center justify-between mb-12"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 sm:mb-12"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div>
-          <h1 className="text-white text-5xl font-bold">Mission Control</h1>
+          <h1 className="text-white text-3xl sm:text-5xl font-bold">Mission Control</h1>
 
-          <p className="text-zinc-400 mt-4 text-lg">
+          <p className="text-zinc-400 mt-2 sm:mt-4 text-base sm:text-lg">
             Welcome back, {student.nombre}.
           </p>
         </div>
@@ -93,7 +93,7 @@ export default function Dashboard() {
     border border-zinc-800
     px-5 py-4
     rounded-2xl
-    min-w-[220px]
+    sm:min-w-[220px]
   "
         >
           <p className="text-zinc-400 text-sm">Current Level</p>
@@ -130,7 +130,7 @@ export default function Dashboard() {
 
       {/* Stats */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-12"
+        className="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-6 mb-8 sm:mb-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{
@@ -181,7 +181,7 @@ export default function Dashboard() {
       {/* Missions */}
       <div>
         <div className="mb-8">
-          <h2 className="text-white text-3xl font-bold">Active Missions</h2>
+          <h2 className="text-white text-2xl sm:text-3xl font-bold">Active Missions</h2>
 
           <p className="text-zinc-400 mt-2">Continue your English journey.</p>
         </div>
@@ -194,7 +194,7 @@ export default function Dashboard() {
                 {/* Topic Header */}
                 <div className="mb-10">
                   <h2
-                    className="text-cyan-400 text-4xl font-extrabold mb-4 tracking-wide"
+                    className="text-cyan-400 text-2xl sm:text-4xl font-extrabold mb-4 tracking-wide"
                     style={{
                       color: "#22d3ee",
                       opacity: 1,

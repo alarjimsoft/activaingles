@@ -597,14 +597,14 @@ export default function TutorChat({
         border border-zinc-800
         rounded-3xl
         flex flex-col
-        h-[800px]
+        h-[calc(100dvh-6rem)] min-h-120 lg:h-200
       "
     >
       {/* Header */}
       <div
         className="
           border-b border-zinc-800
-          p-6
+          p-4 sm:p-6
         "
       >
         <div className="flex items-start gap-4">
@@ -726,15 +726,16 @@ export default function TutorChat({
       <div
         className="
           border-t border-zinc-800
-          p-5
+          p-3 sm:p-5
         "
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* Mic */}
           <button
             onClick={startListening}
             className={`
-              p-4
+              p-3 sm:p-4
+              shrink-0
               rounded-2xl
               transition-all
 
@@ -761,10 +762,11 @@ export default function TutorChat({
             placeholder="Write your answer..."
             className="
               flex-1
+              min-w-0
               bg-zinc-800
               border border-zinc-700
               rounded-2xl
-              px-5 py-4
+              px-4 py-3 sm:px-5 sm:py-4
               text-white
               outline-none
               focus:border-cyan-500
@@ -777,7 +779,8 @@ export default function TutorChat({
             className="
               bg-cyan-500
               hover:bg-cyan-400
-              p-4
+              p-3 sm:p-4
+              shrink-0
               rounded-2xl
               transition-all
             "

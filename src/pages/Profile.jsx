@@ -146,7 +146,7 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-white text-5xl font-bold mb-10">Student Profile</h1>
+        <h1 className="text-white text-3xl sm:text-5xl font-bold mb-6 sm:mb-10">Student Profile</h1>
 
         <div className="bg-zinc-900/70 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8">
           <div className="flex items-center gap-7">
