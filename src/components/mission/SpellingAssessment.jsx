@@ -80,6 +80,20 @@ function gradeSpelling(target, heard, azure) {
     return { correct: false, score: 0, heard: "", message: "No te escuchamos bien. Di cada letra despacio." };
   }
 
+  // Azure muy bajo en puntaje y completitud: no hubo deletreo (p. ej. dijo "city" y Google dio "CT")
+  const clearlyNotSpelled =
+    azure?.success &&
+    (azure.pronunciation_score ?? 0) < 50 &&
+    (azure.completeness_score ?? 0) < 50;
+  if (clearlyNotSpelled) {
+    return {
+      correct: false,
+      score: 0,
+      heard: "",
+      message: `Parece que dijiste la palabra completa. Deletréala letra por letra: ${spelled(target)}.`,
+    };
+  }
+
   if (heard === target) {
     const spelledOut =
       azure === null ||

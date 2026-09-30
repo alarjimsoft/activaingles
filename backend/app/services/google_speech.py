@@ -58,6 +58,8 @@ def transcribe_spelling(audio_bytes):
 
         language_code="en-US",
 
+        max_alternatives=3,
+
         # Clase de Google para secuencias de letras
         speech_contexts=[
             speech.SpeechContext(
@@ -81,6 +83,15 @@ def transcribe_spelling(audio_bytes):
         ch for ch in transcript.upper()
         if "A" <= ch <= "Z"
     )
+
+    # Diagnóstico en los logs de Cloud Run (solo texto reconocido, sin audio ni datos
+    # del estudiante) para ajustar el deletreo con voces reales
+    alternatives = [
+        (alt.transcript, round(alt.confidence, 2))
+        for result in response.results
+        for alt in result.alternatives
+    ]
+    print(f"[spelling] letters={letters!r} alternatives={alternatives}", flush=True)
 
     return {
         "transcript": transcript,
