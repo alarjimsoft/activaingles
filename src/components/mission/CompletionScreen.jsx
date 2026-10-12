@@ -6,6 +6,7 @@ import { Trophy, Star, Clock, MessageCircle, Mic, Zap, LayoutDashboard } from "l
 import useAuthStore from "../../store/authStore";
 import useStatsStore from "../../store/useStatsStore";
 import { getMissionProgress, completeMission } from "../../services/progressService";
+import { DEFAULT_PHASES } from "../../config/missionPhases";
 
 function ScoreCard({ icon: Icon, label, value, color, suffix = "" }) {
   return (
@@ -27,7 +28,7 @@ function ScoreCard({ icon: Icon, label, value, color, suffix = "" }) {
   );
 }
 
-export default function CompletionScreen({ mission, practiceScore = null }) {
+export default function CompletionScreen({ mission, practiceScore = null, phases = DEFAULT_PHASES }) {
   const navigate      = useNavigate();
   const inscripcion   = useAuthStore((state) => state.inscripcion);
   const invalidate    = useStatsStore((state) => state.invalidate);
@@ -110,20 +111,25 @@ export default function CompletionScreen({ mission, practiceScore = null }) {
       {/* Stats grid */}
       {!loading && stats && (
         <div className="p-6 grid grid-cols-2 gap-3">
-          <ScoreCard
-            icon={Zap}
-            label="Práctica"
-            value={practiceScore ?? stats.practice_score}
-            color="text-cyan-400"
-            suffix="%"
-          />
-          <ScoreCard
-            icon={MessageCircle}
-            label="Gramática"
-            value={stats.grammar_score}
-            color="text-green-400"
-            suffix="/100"
-          />
+          {phases.includes("practice") && (
+            <ScoreCard
+              icon={Zap}
+              label="Práctica"
+              value={practiceScore ?? stats.practice_score}
+              color="text-cyan-400"
+              suffix="%"
+            />
+          )}
+          {/* La calificación de gramática sale de la conversación */}
+          {phases.includes("conversation") && (
+            <ScoreCard
+              icon={MessageCircle}
+              label="Gramática"
+              value={stats.grammar_score}
+              color="text-green-400"
+              suffix="/100"
+            />
+          )}
           <ScoreCard
             icon={Mic}
             label="Pronunciación"

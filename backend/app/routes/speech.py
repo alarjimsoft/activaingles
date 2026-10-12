@@ -6,7 +6,8 @@ from fastapi import (
 )
 
 from app.services.google_speech import (
-    transcribe_audio
+    transcribe_audio,
+    transcribe_spelling
 )
 
 from app.services.azure_pronunciation import (
@@ -40,6 +41,23 @@ async def speech_to_text(
     return {
         "transcript": transcript
     }
+
+
+"""
+GOOGLE SPEECH TO TEXT — PALABRA DELETREADA
+"""
+@router.post("/spelling")
+async def speech_spelling(
+
+    audio: UploadFile = File(...)
+
+):
+
+    audio_bytes = await audio.read()
+
+    return transcribe_spelling(
+        audio_bytes
+    )
 
 
 """

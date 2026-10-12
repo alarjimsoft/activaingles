@@ -9,16 +9,17 @@ const PHASES = [
   { key: "completion",   label: "Completada",    icon: Trophy },
 ];
 
-export default function MissionPhaseNavigator({ currentPhase, completedPhases = [], onPhaseClick }) {
-  const currentIdx = PHASES.findIndex((p) => p.key === currentPhase);
+export default function MissionPhaseNavigator({ phases, currentPhase, completedPhases = [], onPhaseClick }) {
+  const visible    = phases ? PHASES.filter((p) => phases.includes(p.key)) : PHASES;
+  const currentIdx = visible.findIndex((p) => p.key === currentPhase);
 
   return (
     <div className="mb-6 sm:mb-10">
       <div className="flex items-start w-full">
-        {PHASES.map((phase, idx) => {
+        {visible.map((phase, idx) => {
           const isCompleted = completedPhases.includes(phase.key);
           const isCurrent   = currentPhase === phase.key;
-          const isLast      = idx === PHASES.length - 1;
+          const isLast      = idx === visible.length - 1;
           const Icon        = phase.icon;
 
           return (
@@ -88,8 +89,8 @@ export default function MissionPhaseNavigator({ currentPhase, completedPhases = 
       {/* Celular: solo íconos arriba y la fase actual aquí */}
       {currentIdx !== -1 && (
         <p className="sm:hidden mt-3 text-center text-sm">
-          <span className="text-zinc-500">Paso {currentIdx + 1} de {PHASES.length} · </span>
-          <span className="text-cyan-400 font-medium">{PHASES[currentIdx].label}</span>
+          <span className="text-zinc-500">Paso {currentIdx + 1} de {visible.length} · </span>
+          <span className="text-cyan-400 font-medium">{visible[currentIdx].label}</span>
         </p>
       )}
     </div>
