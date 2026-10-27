@@ -31,6 +31,8 @@ export default defineConfig({
         // Solo archivos propios de la app. Sin runtimeCaching: /api y Oracle ORDS
         // siempre van a la red (progreso, XP y respuestas del tutor nunca en caché).
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        // three.js + avatar (~840 KB): solo se descarga al entrar a la conversación con avatar
+        globIgnores: ["**/AvatarConversation-*.js"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,

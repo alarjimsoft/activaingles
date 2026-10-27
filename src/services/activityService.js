@@ -1,5 +1,6 @@
 import { API_URL, ORACLE_URL } from "../config/api";
 import { grammarForAI } from "../utils/grammarRules";
+import { getPracticeRules } from "../config/missionPhases";
 
 const FASTAPI    = API_URL;
 const ORACLE_BASE = ORACLE_URL;
@@ -15,6 +16,7 @@ export async function generateActivities(missionContent, missionId, levelCode = 
       level_code: levelCode,
       activity_count: 5,
       include_matching: true,
+      practice_rules: getPracticeRules(missionId),
     }),
   });
   if (!res.ok) throw new Error("Activity generation failed");

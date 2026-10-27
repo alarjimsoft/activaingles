@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Literal, Optional
 
 from app.services.activity_service import generate_activities, evaluate_answer
 
@@ -14,6 +14,7 @@ class GenerateRequest(BaseModel):
     level_code: str = "A1"
     activity_count: int = 4
     include_matching: bool = False
+    practice_rules: list[Literal["greetings_only", "no_names", "no_to_be"]] = []
 
 
 class EvaluateRequest(BaseModel):
@@ -32,7 +33,10 @@ async def generate_route(request: GenerateRequest):
             "level_code": request.level_code,
         }
         activities = generate_activities(
-            context, request.activity_count, request.include_matching
+            context,
+            request.activity_count,
+            request.include_matching,
+            request.practice_rules,
         )
         return {"activities": activities}
     except Exception as e:
