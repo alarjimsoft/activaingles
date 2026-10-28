@@ -108,7 +108,7 @@ activaIngles/
 │   │       ├── azure_pronunciation.py
 │   │       ├── google_speech.py
 │   │       ├── google_tts.py
-│   │       └── progress_service.py
+│   │       └── grammar_rules.py
 │   ├── credentials/
 │   │   └── google-speech.json ← credencial Google Cloud (NO commitear)
 │   ├── .env                   ← API keys reales (NO commitear, en .gitignore)
@@ -167,16 +167,22 @@ Estas reglas vienen de `PROJECT_VISION.md` y son irrompibles:
 7. **Experiencia simple para el estudiante.** La complejidad es interna, no visible.
 8. **La IA no sustituye al tutor humano.** Es el primer nivel de atención, no el único.
 
-### Reglas de XP (implementadas en `progress_service.py`)
+### Reglas de XP (implementadas en `src/utils/missionXp.js`)
 
-```python
-xp += message_count * 5          # +5 por mensaje
-if grammar_score >= 80: xp += 10 # +10 por buena gramática
-if pronunciation_score >= 70: xp += 5   # +5
-if pronunciation_score >= 80: xp += 10  # +10 adicionales
-if pronunciation_score >= 90: xp += 20  # +20 adicionales
-if completed: xp += 50           # +50 al completar misión
+Cada misión vale máximo **200 XP** (el nivel sube cada 200 XP):
+
 ```
+Aprendizaje completado ........ 10
+Desempeño ..................... 150, repartidos entre las fases con puntaje que tenga
+                                la misión (práctica, pronunciación/deletreo, conversación):
+                                puntaje/100 × su parte (3 fases → 50 cada una)
+Misión completada ............. 40
+```
+
+- `awardMissionXp()` (`progressService.js`) recalcula el XP desde los puntajes guardados en
+  Oracle al terminar cada fase y en `CompletionScreen`; se guarda como total, no como suma.
+- `POST /progress/update` usa `GREATEST`: el XP nunca baja si el estudiante repite una fase.
+- Ya no hay XP por mensaje del chat (`/chat/message` no llama a `/progress/add-xp`).
 
 ### Reglas de estado de misiones
 

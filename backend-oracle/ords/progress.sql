@@ -389,83 +389,35 @@ WHERE ID_INSCRIPCION =
       p_comments       => NULL,
       p_source         => 
 'BEGIN
-
     UPDATE USER_PROGRESS
-
     SET
+        -- Solo se actualiza lo que llega; lo que no se envía conserva su valor
+        PROGRESS_PERCENT    = NVL(:progress_percent, PROGRESS_PERCENT),
+        TOTAL_MESSAGES      = NVL(:total_messages, TOTAL_MESSAGES),
+        TOTAL_TIME_MINUTES  = NVL(:total_time_minutes, TOTAL_TIME_MINUTES),
+        GRAMMAR_SCORE       = NVL(:grammar_score, GRAMMAR_SCORE),
 
-        PROGRESS_PERCENT =
-            :progress_percent,
+        -- Se guarda el puntaje tal cual (antes se promediaba con el anterior: 96 → 48)
+        PRONUNCIATION_SCORE = NVL(:pronunciation_score, PRONUNCIATION_SCORE),
 
-        TOTAL_XP_EARNED =
-            :total_xp_earned,
+        -- El XP nunca baja: se conserva el máximo alcanzado
+        TOTAL_XP_EARNED     = GREATEST(NVL(TOTAL_XP_EARNED, 0), NVL(:total_xp_earned, 0)),
 
-        TOTAL_MESSAGES =
-            :total_messages,
+        IS_COMPLETED = CASE WHEN :progress_percent >= 100 THEN ''Y''         ELSE IS_COMPLETED END,
+        STATUS       = CASE WHEN :progress_percent >= 100 THEN ''COMPLETED'' ELSE STATUS END,
+        COMPLETED_AT = CASE WHEN :progress_percent >= 100 THEN NVL(COMPLETED_AT, SYSTIMESTAMP)
+                            ELSE COMPLETED_AT END,
 
-        TOTAL_TIME_MINUTES =
-            :total_time_minutes,
-
-        GRAMMAR_SCORE =
-            :grammar_score,
-
-        PRONUNCIATION_SCORE =
-            CASE
-                WHEN :pronunciation_score IS NOT NULL
-                THEN ROUND(
-                    (NVL(PRONUNCIATION_SCORE, 0) + :pronunciation_score) / 2,
-                    1
-                )
-                ELSE PRONUNCIATION_SCORE
-            END,
-
-        /*
-        Mission completion
-        */
-        IS_COMPLETED =
-            CASE
-                WHEN :progress_percent >= 100
-                THEN ''Y''
-                ELSE IS_COMPLETED
-            END,
-
-        STATUS =
-            CASE
-                WHEN :progress_percent >= 100
-                THEN ''COMPLETED''
-                ELSE STATUS
-            END,
-
-        COMPLETED_AT =
-            CASE
-                WHEN :progress_percent >= 100
-                THEN SYSTIMESTAMP
-                ELSE COMPLETED_AT
-            END,
-
-        LAST_ACTIVITY =
-            SYSTIMESTAMP,
-
-        UPDATED_AT =
-            SYSTIMESTAMP
-
-    WHERE ID_INSCRIPCION =
-        :id_inscripcion
-
-    AND MISSION_ID =
-        :mission_id;
+        LAST_ACTIVITY = SYSTIMESTAMP,
+        UPDATED_AT    = SYSTIMESTAMP
+    WHERE ID_INSCRIPCION = :id_inscripcion
+      AND MISSION_ID     = :mission_id;
 
     COMMIT;
 
     APEX_JSON.OPEN_OBJECT;
-
-    APEX_JSON.WRITE(
-        ''success'',
-        TRUE
-    );
-
+    APEX_JSON.WRITE(''success'', TRUE);
     APEX_JSON.CLOSE_OBJECT;
-
 END;'
       );
 
