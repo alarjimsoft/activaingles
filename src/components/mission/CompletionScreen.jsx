@@ -5,7 +5,7 @@ import { Trophy, Star, Clock, MessageCircle, Mic, Zap, LayoutDashboard } from "l
 
 import useAuthStore from "../../store/authStore";
 import useStatsStore from "../../store/useStatsStore";
-import { getMissionProgress, completeMission } from "../../services/progressService";
+import { getMissionProgress, completeMission, awardMissionXp } from "../../services/progressService";
 import { DEFAULT_PHASES } from "../../config/missionPhases";
 
 function ScoreCard({ icon: Icon, label, value, color, suffix = "" }) {
@@ -46,6 +46,11 @@ export default function CompletionScreen({ mission, practiceScore = null, phases
           idInscripcion: inscripcion.idInscripcion,
           missionId: mission.id,
         });
+      } catch { /* continuar aunque falle */ }
+
+      // XP final (incluye los 40 de completar) antes de mostrar los datos
+      try {
+        await awardMissionXp({ idInscripcion: inscripcion.idInscripcion, missionId: mission.id });
       } catch { /* continuar aunque falle */ }
 
       try {

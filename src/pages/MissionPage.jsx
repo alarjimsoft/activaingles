@@ -9,7 +9,7 @@ import Loader from "../components/ui/Loader";
 import useAuthStore from "../store/authStore";
 import { getMissions } from "../services/missionService";
 import { getMissionContent } from "../services/missionContentService";
-import { startProgress, getPhaseStatus, updatePhase } from "../services/progressService";
+import { startProgress, getPhaseStatus, updatePhase, awardMissionXp } from "../services/progressService";
 import MissionPhaseNavigator from "../components/mission/MissionPhaseNavigator";
 import LearningGuide from "../components/mission/LearningGuide";
 import PracticeZone from "../components/mission/PracticeZone";
@@ -145,6 +145,12 @@ export default function MissionPage() {
       if (completedPhase === "assessment")  payload.assessmentCompleted = "Y";
 
       await updatePhase(payload).catch(console.error);
+
+      // XP con los puntajes ya guardados; el de "Completada" lo otorga CompletionScreen
+      if (nextPhase !== "completion") {
+        awardMissionXp({ idInscripcion: inscripcion.idInscripcion, missionId: mission.id })
+          .catch(console.error);
+      }
     },
     [inscripcion, mission],
   );

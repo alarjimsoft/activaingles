@@ -8,11 +8,6 @@ from app.services.openai_service import (
     get_tutor_response
 )
 
-from app.services.progress_service import (
-    calculate_xp,
-    add_xp_to_progress
-)
-
 router = APIRouter(
     prefix="/chat",
     tags=["chat"]
@@ -69,37 +64,9 @@ async def chat_message(
     ) else 90
 
     """
-    XP SYSTEM
+    El XP ya no se suma por mensaje: se calcula por fase desde los puntajes
+    guardados en Oracle (frontend: src/utils/missionXp.js)
     """
-    practice_score = None
-    if request.learning_context:
-        practice_score = request.learning_context.get("practice_score")
-
-    xp_earned = calculate_xp(
-
-        grammar_score=grammar_score,
-
-        pronunciation_score=0,
-
-        message_count=1,
-
-        completed=request.progress_percent>=100,
-
-        practice_score=practice_score,
-    )
-
-    """
-    Update USER_PROGRESS
-    through ORDS
-    """
-    add_xp_to_progress(
-
-        request.id_inscripcion,
-
-        request.mission_id,
-
-        xp_earned
-    )
 
     """
     Return AI response + grammar_score

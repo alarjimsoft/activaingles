@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ORACLE_URL } from "../config/api";
+import { computeMissionXp } from "../utils/missionXp";
 
 const API = `${ORACLE_URL}/progress`;
 
@@ -123,4 +124,30 @@ export async function updatePhase({
 
   const response = await axios.post(`${API}/phase`, payload);
   return response.data;
+}
+
+// Recalcula el XP de la misión con los puntajes guardados en Oracle y lo guarda.
+// Oracle conserva el máximo (GREATEST), así que llamarla varias veces es seguro.
+export async function awardMissionXp({ idInscripcion, missionId }) {
+  const [phase, progress] = await Promise.all([
+    getPhaseStatus(idInscripcion, missionId),
+    getMissionProgress(idInscripcion, missionId).catch(() => null),
+  ]);
+
+  const completed =
+    progress?.is_completed === "Y" || phase?.current_phase === "completion";
+
+  const totalXpEarned = computeMissionXp(missionId, {
+    learningDone: phase?.learning_completed === "Y",
+    completed,
+    scores: {
+      practice:     phase?.practice_completed === "Y" ? phase.practice_score : null,
+      assessment:   phase?.assessment_completed === "Y" ? progress?.pronunciation_score : null,
+      // La gramática de la conversación cuenta cuando la conversación terminó (misión completada)
+      conversation: completed ? progress?.grammar_score : null,
+    },
+  });
+
+  await updateProgress({ idInscripcion, missionId, totalXpEarned });
+  return totalXpEarned;
 }

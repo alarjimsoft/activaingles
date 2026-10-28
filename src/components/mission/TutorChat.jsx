@@ -363,7 +363,6 @@ export default function TutorChat({
     const conversationCap = baseProgress + 40;
     const progressPercent = Math.min(baseProgress + totalMessages * 8, conversationCap);
 
-    const xpEarned = totalMessages * 5;
 
     try {
       const result = await sendChatMessage({
@@ -440,8 +439,6 @@ export default function TutorChat({
 
         isCompleted: false,
 
-        totalXpEarned: xpEarned,
-
         totalMessages: messages.length + 1,
 
         totalTimeMinutes:
@@ -493,7 +490,6 @@ export default function TutorChat({
     const conversationCap = baseProgress + 40;
     const progressPercent = Math.min(baseProgress + totalMessages * 8, conversationCap);
 
-    const xpEarned = totalMessages * 5;
 
     setIsTyping(true);
 
@@ -571,8 +567,6 @@ export default function TutorChat({
         progressPercent,
 
         isCompleted: false,
-
-        totalXpEarned: xpEarned,
 
         totalMessages: messages.length + 1,
 
