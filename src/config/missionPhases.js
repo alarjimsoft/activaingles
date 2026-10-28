@@ -1,5 +1,5 @@
-// Fases de cada misión y tipo de evaluación en la fase "assessment".
-// Las misiones no listadas usan el recorrido completo y la evaluación de pronunciación.
+// Fases de cada misión, tipo de evaluación en la fase "assessment" y tipo de conversación.
+// Las misiones no listadas usan el recorrido completo, la evaluación de pronunciación y el chat.
 
 export const DEFAULT_PHASES = ["learning", "practice", "assessment", "conversation", "completion"];
 
@@ -7,6 +7,7 @@ export const DEFAULT_PHASES = ["learning", "practice", "assessment", "conversati
 const PHASE_WEIGHTS = { learning: 20, practice: 20, assessment: 20, conversation: 40 };
 
 const MISSION_CONFIG = {
+  1: { conversation: "avatar", practiceRules: ["greetings_only", "no_names"] },
   3: { phases: ["learning", "assessment", "completion"], assessment: "spelling" },
 };
 
@@ -17,6 +18,17 @@ export function getMissionPhases(missionId) {
 // "pronunciation" (6 frases) o "spelling" (deletrear 6 palabras)
 export function getAssessmentType(missionId) {
   return MISSION_CONFIG[missionId]?.assessment ?? "pronunciation";
+}
+
+// "chat" (tutor IA libre) o "avatar" (el avatar pide 6 frases del vocabulario)
+export function getConversationType(missionId) {
+  return MISSION_CONFIG[missionId]?.conversation ?? "chat";
+}
+
+// Reglas para los ejercicios de práctica (PRACTICE_RULES en activity_service.py):
+// "greetings_only" (solo saludos y despedidas), "no_names" (sin nombres), "no_to_be" (sin verbo TO BE)
+export function getPracticeRules(missionId) {
+  return MISSION_CONFIG[missionId]?.practiceRules ?? [];
 }
 
 export function getPhaseWeights(phases) {

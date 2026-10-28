@@ -20,6 +20,22 @@ export async function speakText(text) {
   return response.blob();
 }
 
+// Audio del avatar con el inicio de cada palabra (ms) para mover los labios.
+// language: "en" (frases en inglés) o "es" (instrucciones). Devuelve { audio (base64 MP3), words, wtimes }
+export async function speakTextTimed(text, language = "en") {
+  const response = await fetch(`${API_URL}/tts/speak-timed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, language }),
+  });
+
+  if (!response.ok) {
+    throw new Error("TTS failed");
+  }
+
+  return response.json();
+}
+
 // Versión que maneja el ciclo completo: fetch → play → revoke
 export async function playText(text) {
   const blob = await speakText(text);

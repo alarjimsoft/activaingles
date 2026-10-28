@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 
 import MainLayout from "../layouts/MainLayout";
 import MissionSidebar from "../components/mission/MissionSidebar";
@@ -20,9 +20,13 @@ import {
   DEFAULT_PHASES,
   getMissionPhases,
   getAssessmentType,
+  getConversationType,
   getPhaseWeights,
   resolvePhase,
 } from "../config/missionPhases";
+
+// three.js + TalkingHead solo se descargan al entrar a la conversación con avatar
+const AvatarConversation = lazy(() => import("../components/mission/AvatarConversation"));
 
 export default function MissionPage() {
   const { id } = useParams();
@@ -207,7 +211,20 @@ export default function MissionPage() {
             />
           )}
 
-          {currentPhase === "conversation" && (
+          {currentPhase === "conversation" && getConversationType(mission.id) === "avatar" && (
+            <Suspense fallback={<Loader />}>
+              <AvatarConversation
+                missionContent={missionContent}
+                missionId={mission.id}
+                baseProgress={baseProgress}
+                phaseWeight={phaseWeights.conversation}
+                setProgress={setProgress}
+                onComplete={() => advancePhase("conversation")}
+              />
+            </Suspense>
+          )}
+
+          {currentPhase === "conversation" && getConversationType(mission.id) === "chat" && (
             <TutorChat
               mission={mission}
               setProgress={setProgress}
