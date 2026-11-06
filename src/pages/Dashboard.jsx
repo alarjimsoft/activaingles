@@ -1,6 +1,8 @@
 import MainLayout from "../layouts/MainLayout";
 
 import MissionCard from "../components/dashboard/MissionCard";
+import QuizCard from "../components/dashboard/QuizCard";
+import { getAvailableQuizzes } from "../services/quizService";
 
 import StatCard from "../components/ui/StatCard";
 import ProgressCard from "../components/ui/ProgressCard";
@@ -56,6 +58,22 @@ export default function Dashboard() {
     }
 
     loadMissions();
+  }, [inscripcion]);
+
+  // Quizzes publicados del curso: cada uno va después del tema que indica Oracle
+  const [quizzes, setQuizzes] = useState([]);
+
+  useEffect(() => {
+    async function loadQuizzes() {
+      if (!inscripcion) return;
+      try {
+        setQuizzes(await getAvailableQuizzes(inscripcion.idInscripcion));
+      } catch (error) {
+        console.error(error); // sin quizzes el Dashboard sigue funcionando
+      }
+    }
+
+    loadQuizzes();
   }, [inscripcion]);
 
   // ✅ VALIDACIONES DESPUÉS
@@ -212,6 +230,12 @@ export default function Dashboard() {
                     <MissionCard key={mission.missionId} mission={mission} />
                   ))}
                 </div>
+
+                {quizzes
+                  .filter((quiz) => quiz.afterTopicId === topicMissions[0]?.topicId)
+                  .map((quiz) => (
+                    <QuizCard key={`quiz-${quiz.quizId}`} quiz={quiz} />
+                  ))}
               </div>
             ),
           )}

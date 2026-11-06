@@ -7,6 +7,7 @@ import Progress from "../pages/Progress";
 import Profile from "../pages/Profile";
 import MissionPage from "../pages/MissionPage";
 import MissionContentEditor from "../pages/MissionContentEditor";
+import QuizPage from "../pages/QuizPage";
 import { AnimatePresence } from "framer-motion";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import AdminRoute from "../routes/AdminRoute";
@@ -61,6 +62,15 @@ export default function AppRouter() {
             element={
               <ProtectedRoute>
                 <MissionPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id"
+            element={
+              <ProtectedRoute>
+                <QuizPage />
               </ProtectedRoute>
             }
           />
