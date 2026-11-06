@@ -31,6 +31,8 @@ BEGIN
     COMMIT;
 
     DBMS_OUTPUT.PUT_LINE('ORDS_QUIZ_CLIENT_ID=' || l_client.client_key.client_id);
+    -- En algunas versiones de ORDS el registro no devuelve el secreto: si la linea sale vacia,
+    -- ejecuta ords/quiz_oauth_secret.sql para generarlo.
     DBMS_OUTPUT.PUT_LINE('ORDS_QUIZ_CLIENT_SECRET=' || l_client.client_secret.secret);
 END;
 /
