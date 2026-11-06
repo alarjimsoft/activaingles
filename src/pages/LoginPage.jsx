@@ -63,7 +63,7 @@ export default function LoginPage() {
           return;
         }
 
-        loginAcademicoStore(result.academico);
+        loginAcademicoStore(result.academico, result.token, result.expiresAt);
         navigate("/content");
       }
     } catch {

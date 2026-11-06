@@ -125,14 +125,24 @@ def signed_get_url(key: str, minutes: int = 120, download_name: str | None = Non
 
 
 def signed_put_url(key: str, content_type: str, minutes: int = 30) -> dict:
-    """URL para que el navegador suba el archivo directo al bucket (PUT con ese Content-Type)."""
+    """URL para que el navegador suba el archivo directo al bucket (PUT con ese Content-Type).
+
+    Solo se firma Content-Type: el CORS del bucket permite ese encabezado y el navegador
+    cancela la subida si envía otro (Cache-Control). La caché se pone después con
+    set_cache_control, cuando el backend confirma la subida.
+    """
     url = _blob(key).generate_signed_url(
         version="v4",
         expiration=datetime.timedelta(minutes=minutes),
         method="PUT",
         content_type=content_type,
-        headers={"Cache-Control": CACHE_CONTROL},
         **_signing_args(),
     )
-    return {"url": url, "method": "PUT",
-            "headers": {"Content-Type": content_type, "Cache-Control": CACHE_CONTROL}}
+    return {"url": url, "method": "PUT", "headers": {"Content-Type": content_type}}
+
+
+def set_cache_control(key: str) -> None:
+    blob = _client().bucket(bucket_name()).get_blob(key)
+    if blob is not None and blob.cache_control != CACHE_CONTROL:
+        blob.cache_control = CACHE_CONTROL
+        blob.patch()

@@ -230,6 +230,7 @@ def media_complete(version_id: int, request: MediaCompleteRequest, academico: di
     size = storage.object_size(key)
     if size is None:
         raise _fail(409, "UPLOAD_NOT_FOUND", f"«{target['fileName']}» todavía no llega al servidor. Vuelve a subirlo.")
+    storage.set_cache_control(key)
     saved = oracle.save_media({"versionId": version_id, "fileName": target["fileName"],
                                "mediaType": target["mediaType"], "objectKey": key,
                                "contentType": AUDIO_TYPES.get(extension) or VIDEO_TYPES[extension],
