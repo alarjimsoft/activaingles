@@ -6,6 +6,7 @@ que el reporte diga qué está mal y dónde.
 """
 
 import io
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -49,6 +50,17 @@ def set_value(document: Document, table: int, label: str, *lines: str) -> None:
 def remove_table(document: Document, table: int) -> None:
     element = document.tables[table]._element
     element.getparent().remove(element)
+
+
+def paste_copy(document: Document, table: int) -> None:
+    """Copia una tarjeta al final del documento, con un renglón vacío antes (como hace el académico)."""
+    body = document.element.body
+    end = body.sectPr if body.sectPr is not None else None
+    for element in (document.add_paragraph()._element, deepcopy(document.tables[table]._element)):
+        if end is not None:
+            end.addprevious(element)
+        else:
+            body.append(element)
 
 
 def analyze(document: Document):
@@ -130,6 +142,29 @@ def test_plantilla_archivos(template):
     assert template.images[image_name].data.startswith(b"\x89PNG")
     kinds = {m["fileName"]: m["mediaType"] for m in template.media}
     assert kinds == {image_name: "IMAGE", "dialogo_saludos.mp3": "AUDIO"}
+
+
+def test_quiz_mas_grande_con_seis_secciones():
+    """El lector no espera una cantidad fija: cada tema puede tener las secciones y preguntas que necesite."""
+    document = template_document()
+    for table in (S2, Q1_MC, Q5_FILL, Q8_OPEN, S3, Q2_TF, Q3_MATCH):
+        paste_copy(document, table)
+    build = analyze(document)
+    assert build.ok and build.report["warningCount"] == 0
+    assert build.report["summary"] == "Se detectaron 6 secciones y 13 preguntas (25 puntos en total)."
+    sections = build.definition["sections"]
+    assert [len(s["questions"]) for s in sections] == [2, 2, 3, 1, 3, 2]
+    assert [q["key"] for q in sections[4]["questions"]] == ["S5-P1", "S5-P2", "S5-P3"]
+    assert [q["number"] for q in questions(build)] == list(range(1, 14))
+
+
+def test_quiz_minimo_una_seccion_una_pregunta():
+    document = template_document()
+    for table in sorted((S2, Q3_MATCH, Q4_MC_IMG, S3, Q5_FILL, Q6_FILL, Q7_FILL, S4, Q8_OPEN, Q2_TF), reverse=True):
+        remove_table(document, table)
+    build = analyze(document)
+    assert build.ok
+    assert build.report["summary"] == "Se detectaron 1 sección y 1 pregunta (2 puntos en total)."
 
 
 def test_texto_fuera_de_las_tarjetas_se_ignora():
