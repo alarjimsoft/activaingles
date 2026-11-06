@@ -174,6 +174,9 @@ class FakeStorage:
     def signed_put_url(self, key, content_type, minutes=30):
         return {"url": f"https://storage.test/{key}?subir", "method": "PUT", "headers": {"Content-Type": content_type}}
 
+    def set_cache_control(self, key):
+        self.cache_set = getattr(self, "cache_set", []) + [key]
+
 
 @pytest.fixture
 def fakes(monkeypatch):
@@ -182,7 +185,7 @@ def fakes(monkeypatch):
     for name in ("admin_list", "get_quiz", "get_version", "create_version", "save_media", "publish_version",
                  "get_stats", "available", "start_attempt", "get_attempt", "finish_attempt", "login_academico"):
         monkeypatch.setattr(oracle_quiz, name, getattr(oracle, name))
-    for name in ("upload_bytes", "object_size", "signed_get_url", "signed_put_url"):
+    for name in ("upload_bytes", "object_size", "signed_get_url", "signed_put_url", "set_cache_control"):
         monkeypatch.setattr(quiz_storage, name, getattr(storage, name))
     ai_calls = []
     monkeypatch.setattr(quiz_ai, "grade_open_answer",
@@ -318,8 +321,10 @@ def test_flujo_de_audio_y_publicacion(client, auth, fakes):
     response = client.post(f"{base}/media-complete", headers=auth, json=complete)
     assert response.status_code == 409 and response.json()["detail"]["code"] == "UPLOAD_NOT_FOUND"
 
+    assert set(body["upload"]["headers"]) == {"Content-Type"}   # el CORS del bucket solo permite ese encabezado
     storage.objects[body["objectKey"]] = b"0123456789"     # el navegador subió el archivo
     assert client.post(f"{base}/media-complete", headers=auth, json=complete).json()["pending"] == 0
+    assert storage.cache_set == [body["objectKey"]]
 
     detail = client.get(base, headers=auth).json()
     assert detail["pendingFiles"] == []

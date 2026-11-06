@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
+import { useSearchParams } from "react-router-dom";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -17,6 +19,9 @@ import {
 } from "lucide-react";
 
 import Sidebar from "../components/layout/Sidebar";
+import QuizListItem from "../components/quiz/QuizListItem";
+import QuizPanel from "../components/quiz/QuizPanel";
+import { getAdminQuizzes } from "../services/quizService";
 
 import {
   EMPTY_GRAMMAR_RULE,
@@ -551,16 +556,45 @@ export default function MissionContentEditor() {
   const [saveStatus, setSaveStatus] = useState(null); // 'success' | 'error' | null
   const [missionDropdownOpen, setMissionDropdownOpen] = useState(false);
 
+  // Quizzes: van en la lista después del tema indicado en Oracle (QUIZZES.AFTER_TOPIC_ID).
+  // El quiz elegido se guarda en la URL (?quiz=1) para no perderlo al recargar.
+  const [quizzes, setQuizzes] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedQuizId = Number(searchParams.get("quiz")) || null;
+  const selectedQuiz = quizzes.find((q) => q.quizId === selectedQuizId) ?? null;
+
+  const loadQuizzes = useCallback(async () => {
+    try {
+      setQuizzes(await getAdminQuizzes());
+    } catch {
+      setQuizzes([]); // sin sesión válida el servicio ya avisa y cierra la sesión
+    }
+  }, []);
+
   useEffect(() => {
     async function load() {
       const list = await getAdminMissionList();
       setMissions(list);
       setLoadingMissions(false);
     }
+    async function loadInitialQuizzes() {
+      try {
+        setQuizzes(await getAdminQuizzes());
+      } catch {
+        setQuizzes([]);
+      }
+    }
     load();
+    loadInitialQuizzes();
   }, []);
 
+  function selectQuiz(quiz) {
+    setSelectedMission(null);
+    setSearchParams({ quiz: String(quiz.quizId) });
+  }
+
   const loadMissionContent = useCallback(async (mission) => {
+    setSearchParams({});
     setSelectedMission(mission);
     setLoadingContent(true);
     setSaveStatus(null);
@@ -585,7 +619,7 @@ export default function MissionContentEditor() {
     }
 
     setLoadingContent(false);
-  }, []);
+  }, [setSearchParams]);
 
   async function handleSave() {
     if (!selectedMission) return;
@@ -636,7 +670,9 @@ export default function MissionContentEditor() {
               Misiones
             </h2>
             <p className="text-zinc-500 text-xs mt-1">
-              {missions.length} misiones disponibles
+              {missions.length} misiones
+              {quizzes.length > 0 &&
+                ` · ${quizzes.length} ${quizzes.length === 1 ? "quiz" : "quizzes"}`}
             </p>
           </div>
 
@@ -698,6 +734,16 @@ export default function MissionContentEditor() {
                       </button>
                     );
                   })}
+                  {quizzes
+                    .filter((q) => q.afterTopicId === mlist[0]?.topicId)
+                    .map((q) => (
+                      <QuizListItem
+                        key={`quiz-${q.quizId}`}
+                        quiz={q}
+                        selected={selectedQuizId === q.quizId}
+                        onSelect={selectQuiz}
+                      />
+                    ))}
                 </div>
               ))
             )}
@@ -711,15 +757,17 @@ export default function MissionContentEditor() {
 
         {/* ── Content Editor Panel ── */}
         <main className="flex-1 min-w-0 overflow-y-auto">
-          {!selectedMission ? (
+          {selectedQuiz ? (
+            <QuizPanel key={selectedQuiz.quizId} quiz={selectedQuiz} onChanged={loadQuizzes} />
+          ) : !selectedMission ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-8">
               <BookOpen size={48} className="text-zinc-700 mb-4" />
               <h3 className="text-white text-xl font-semibold mb-2">
-                Selecciona una misión
+                Selecciona una misión o un quiz
               </h3>
               <p className="text-zinc-500 text-sm max-w-sm">
                 Elige una misión del panel izquierdo para editar su contenido
-                pedagógico.
+                pedagógico, o un quiz para subir su Word.
               </p>
             </div>
           ) : loadingContent ? (
