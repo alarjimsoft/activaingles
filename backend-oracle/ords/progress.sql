@@ -284,6 +284,8 @@ END;'
     M.AVG_PROGRESS,
     M.AVG_PRONUNCIATION,
     M.AVG_GRAMMAR,
+    M.AVG_PRACTICE_SCORE,
+    S.CURRENT_STREAK,
     FLOOR((M.MISSION_XP + Q.QUIZ_XP) / 200) + 1         AS "LEVEL",
     (FLOOR((M.MISSION_XP + Q.QUIZ_XP) / 200) + 1) * 200 AS XP_NEXT_LEVEL
 FROM (
@@ -293,10 +295,18 @@ FROM (
            NVL(SUM(TOTAL_TIME_MINUTES), 0)                      AS TOTAL_TIME,
            ROUND(AVG(PROGRESS_PERCENT), 0)                      AS AVG_PROGRESS,
            ROUND(AVG(PRONUNCIATION_SCORE), 1)                   AS AVG_PRONUNCIATION,
-           ROUND(AVG(GRAMMAR_SCORE), 1)                         AS AVG_GRAMMAR
+           ROUND(AVG(GRAMMAR_SCORE), 1)                         AS AVG_GRAMMAR,
+           ROUND(AVG(PRACTICE_SCORE), 1)                        AS AVG_PRACTICE_SCORE
       FROM USER_PROGRESS
      WHERE ID_INSCRIPCION = :id_inscripcion
 ) M
+CROSS JOIN (
+    -- Racha de dias del estudiante (MAX: siempre devuelve una fila)
+    SELECT NVL(MAX(E.STREAK_DAYS), 0) AS CURRENT_STREAK
+      FROM INSCRIPCIONES I
+      JOIN ESTUDIANTES E ON E.MATRICULA = I.MATRICULA
+     WHERE I.ID_INSCRIPCION = :id_inscripcion
+) S
 CROSS JOIN (
     -- Cuenta el mejor intento de cada quiz
     SELECT NVL(SUM(BEST_XP), 0) AS QUIZ_XP
