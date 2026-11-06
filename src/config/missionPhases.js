@@ -7,7 +7,7 @@ export const DEFAULT_PHASES = ["learning", "practice", "assessment", "conversati
 const PHASE_WEIGHTS = { learning: 20, practice: 20, assessment: 20, conversation: 40 };
 
 const MISSION_CONFIG = {
-  1: { conversation: "avatar", practiceRules: ["greetings_only", "no_names"] },
+  1: { conversation: "avatar", practiceRules: ["greetings_only", "no_names", "spanish_prompts"] },
   3: { phases: ["learning", "assessment", "completion"], assessment: "spelling" },
 };
 
@@ -26,7 +26,8 @@ export function getConversationType(missionId) {
 }
 
 // Reglas para los ejercicios de práctica (PRACTICE_RULES en activity_service.py):
-// "greetings_only" (solo saludos y despedidas), "no_names" (sin nombres), "no_to_be" (sin verbo TO BE)
+// "greetings_only" (solo saludos y despedidas), "no_names" (sin nombres), "no_to_be" (sin verbo TO BE),
+// "spanish_prompts" (preguntas y situaciones en español, respuesta en inglés)
 export function getPracticeRules(missionId) {
   return MISSION_CONFIG[missionId]?.practiceRules ?? [];
 }

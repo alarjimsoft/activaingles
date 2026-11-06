@@ -70,8 +70,20 @@ NO_NAMES_RULES = """
 - STRICT REQUIREMENT: do NOT use names of people anywhere (no first names, surnames or titles like Mr., Mrs., Sr., Sra.), not even in Spanish text
 - This applies even if the grammar focus or examples contain names: drop the name or use a word like teacher, friend or everyone instead"""
 
+SPANISH_PROMPTS_RULES = """
+- STRICT REQUIREMENT: questions and situations must be written in SPANISH; the student answers in English
+- For multiple_choice: prompt in Spanish (e.g. "¿Qué dices al despedirte en la noche?"); options and correct_answer in English
+- For fill_blank: describe the situation in Spanish, then the English sentence with the blank (e.g. "Antes de dormir dices: Good [___].")"""
+
 # Ejemplos sin TO BE, sin nombres y de saludos/despedidas, compatibles con todas las reglas
 RULES_FILL_BLANK = ("Good [___], sleep well.", "night", "Es una despedida antes de dormir")
+SPANISH_FILL_BLANK = ("Antes de dormir dices: Good [___].", "night", "Es una despedida antes de dormir")
+SPANISH_MULTIPLE_CHOICE = (
+    "¿Qué dices al llegar a un lugar en la mañana?",
+    '["Good morning", "Good night", "Good bye", "See you later"]',
+    "Good morning",
+    "Piensa en la hora del día",
+)
 RULES_TRANSLATION = ("Te veo mañana.", "See you tomorrow.", "Es una despedida")
 RULES_MATCHING_PAIRS = [
     ("Good morning", "Buenos días"),
@@ -85,6 +97,13 @@ GREETING_PATTERN = re.compile(
     r"see you|(nice|pleased|glad) to (meet|see) you|how are you|how do you do|"
     r"how is it going|how's it going|what's up|have a (nice|good|great) day|"
     r"take care|welcome|fine,? thanks?|i'm fine|so long)\b",
+    re.IGNORECASE,
+)
+
+# Señales de texto en español: signos de apertura, acentos, ñ o palabras frecuentes
+SPANISH_PATTERN = re.compile(
+    r"[¿¡áéíóúñ]|\b(que|como|cual|cuando|dices|dice|para|por|la|el|al|del|un|una|"
+    r"te|tu|antes|despues|llegas|sales|saludas|despides|despedirte|saludar|noche|tarde)\b",
     re.IGNORECASE,
 )
 
@@ -196,12 +215,21 @@ PRACTICE_RULES = {
     "greetings_only": GREETINGS_ONLY_RULES,
     "no_names": NO_NAMES_RULES,
     "no_to_be": NO_TO_BE_RULES,
+    "spanish_prompts": SPANISH_PROMPTS_RULES,
 }
+
+
+def _prompt_in_english(activity: dict) -> bool:
+    """Opción múltiple o completar cuya pregunta o situación no está en español."""
+    if activity.get("type") not in ("multiple_choice", "fill_blank"):
+        return False
+    return not SPANISH_PATTERN.search(str(activity.get("prompt", "")))
 
 
 def _breaks_rules(activity: dict, rules: list, allowed_words: set) -> bool:
     return (
         ("greetings_only" in rules and _activity_off_topic(activity))
+        or ("spanish_prompts" in rules and _prompt_in_english(activity))
         or ("no_names" in rules and _activity_has_names(activity, allowed_words))
         or ("no_to_be" in rules and _activity_uses_to_be(activity))
     )
@@ -306,8 +334,18 @@ def _generate_once(
     extra_rules      = "".join(PRACTICE_RULES[r] for r in rules)
 
     fill_prompt, fill_answer, fill_hint = (
-        RULES_FILL_BLANK if rules
+        SPANISH_FILL_BLANK if "spanish_prompts" in rules
+        else RULES_FILL_BLANK if rules
         else ("She [___] studying English right now.", "is", "Usa el verbo BE")
+    )
+    choice_prompt, choice_options, choice_answer, choice_hint = (
+        SPANISH_MULTIPLE_CHOICE if "spanish_prompts" in rules
+        else (
+            "Which sentence uses the correct grammar?",
+            '["Option A", "Option B", "Option C", "Option D"]',
+            "Option C",
+            "Piensa en la regla gramatical",
+        )
     )
     translation_prompt, translation_answer, translation_hint = (
         RULES_TRANSLATION if rules
@@ -339,10 +377,10 @@ Generate exactly {activity_count} practice activities. Return a JSON object with
     {{
       "id": 2,
       "type": "multiple_choice",
-      "prompt": "Which sentence uses the correct grammar?",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correct_answer": "Option C",
-      "hint": "Piensa en la regla gramatical",
+      "prompt": "{choice_prompt}",
+      "options": {choice_options},
+      "correct_answer": "{choice_answer}",
+      "hint": "{choice_hint}",
       "difficulty": "medium"
     }},
     {{
