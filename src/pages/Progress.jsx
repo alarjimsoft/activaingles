@@ -8,7 +8,9 @@ import {
   BookOpen,
   Trophy,
   AlertCircle,
+  ClipboardCheck,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
 import MissionProgressRow from "../components/progress/MissionProgressRow";
@@ -17,6 +19,7 @@ import useAuthStore from "../store/authStore";
 import useStatsStore from "../store/useStatsStore";
 import { getMissions } from "../services/missionService";
 import { getAllMissionsProgress } from "../services/progressService";
+import { getAvailableQuizzes } from "../services/quizService";
 
 function scoreColor(value) {
   if (value == null) return "text-zinc-500";
@@ -30,6 +33,53 @@ function scoreBarColor(value) {
   if (value >= 80) return "bg-green-500";
   if (value >= 60) return "bg-yellow-500";
   return "bg-red-500";
+}
+
+function QuizProgressRow({ quiz }) {
+  const best = quiz.bestScorePercent != null ? Math.round(quiz.bestScorePercent) : null;
+  const status =
+    quiz.status === "LOCKED"
+      ? { label: "Bloqueado", color: "text-zinc-500" }
+      : quiz.passed === "Y"
+        ? { label: "Aprobado", color: "text-green-400" }
+        : quiz.attemptsUsed > 0
+          ? { label: "No aprobado", color: "text-amber-300" }
+          : { label: "Disponible", color: "text-violet-300" };
+
+  return (
+    <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <p className="text-white font-semibold">{quiz.title}</p>
+        <p className="text-zinc-500 text-xs mt-1">
+          Después de «{quiz.afterTopicTitle}» ·{" "}
+          {quiz.maxAttempts
+            ? `${quiz.attemptsUsed} de ${quiz.maxAttempts} intentos`
+            : `${quiz.attemptsUsed} intentos`}
+        </p>
+      </div>
+      <div className="flex items-center gap-5">
+        <div className="text-right">
+          <p className={`text-sm font-semibold ${status.color}`}>{status.label}</p>
+          <p className="text-zinc-500 text-xs">se aprueba con {quiz.passingScore}%</p>
+        </div>
+        <div className="w-24">
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-zinc-500">Mejor</span>
+            <span className={scoreColor(best)}>{best != null ? `${best}%` : "—"}</span>
+          </div>
+          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div className={`h-full ${scoreBarColor(best)}`} style={{ width: `${best ?? 0}%` }} />
+          </div>
+        </div>
+        <p className="w-16 text-right text-cyan-300 text-sm font-semibold">{quiz.bestXp ?? 0} XP</p>
+        {quiz.status !== "LOCKED" && (
+          <Link to={`/quizzes/${quiz.quizId}`} className="text-violet-300 text-sm hover:text-violet-200">
+            Abrir
+          </Link>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function GlobalScoreBar({ label, value, icon: Icon }) {
@@ -80,18 +130,21 @@ export default function Progress() {
   const [error, setError] = useState(null);
   const [missions, setMissions] = useState([]);
   const [missionProgressMap, setMissionProgressMap] = useState({});
+  const [quizzes, setQuizzes] = useState([]);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        // Fase 1: stats globales + lista de misiones en paralelo
-        const [, missionsData] = await Promise.all([
+        // Fase 1: stats globales + lista de misiones + quizzes en paralelo
+        const [, missionsData, quizzesData] = await Promise.all([
           fetchStats(inscripcion.idInscripcion),
           getMissions(inscripcion.idCurso, inscripcion.idInscripcion),
+          getAvailableQuizzes(inscripcion.idInscripcion).catch(() => []),
         ]);
         setMissions(missionsData);
+        setQuizzes(quizzesData);
 
         // Fase 2: progreso por misión (N llamadas paralelas, solo no-LOCKED)
         const progressMap = await getAllMissionsProgress(
@@ -263,6 +316,26 @@ export default function Progress() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Quizzes ─────────────────────────────────────────────────── */}
+      {quizzes.length > 0 && (
+        <motion.div
+          className="bg-zinc-900/70 backdrop-blur-xl border border-zinc-800 rounded-3xl p-6 mb-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <ClipboardCheck size={18} className="text-violet-300" />
+            <h2 className="text-white text-lg font-bold">Quizzes</h2>
+          </div>
+          <div className="divide-y divide-zinc-800">
+            {quizzes.map((quiz) => (
+              <QuizProgressRow key={quiz.quizId} quiz={quiz} />
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Progreso por topic ──────────────────────────────────────── */}
       <motion.div
