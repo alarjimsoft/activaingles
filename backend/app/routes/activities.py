@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Literal, Optional
+from typing import Optional
 
 from app.services.activity_service import generate_activities, evaluate_answer
 
@@ -14,7 +14,8 @@ class GenerateRequest(BaseModel):
     level_code: str = "A1"
     activity_count: int = 4
     include_matching: bool = False
-    practice_rules: list[Literal["greetings_only", "no_names", "no_to_be"]] = []
+    # Claves de PRACTICE_RULES; las desconocidas se ignoran para que un frontend más nuevo no rompa la práctica
+    practice_rules: list[str] = []
 
 
 class EvaluateRequest(BaseModel):
