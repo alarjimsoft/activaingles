@@ -334,7 +334,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY PKG_QUIZ AS
             RETURN;
         END LOOP;
 
-        fail(E_VERSION_NOT_FOUND, 'VERSION_NOT_FOUND: no existe la versión ' || p_version_id);
+        fail(E_VERSION_NOT_FOUND, 'VERSION_NOT_FOUND: no existe la version ' || p_version_id);
     END GET_VERSION;
 
     /*
@@ -446,11 +446,11 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY PKG_QUIZ AS
             SELECT STATUS INTO v_status FROM QUIZ_VERSIONS WHERE VERSION_ID = v_version_id FOR UPDATE;
         EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                fail(E_VERSION_NOT_FOUND, 'VERSION_NOT_FOUND: no existe la versión ' || v_version_id);
+                fail(E_VERSION_NOT_FOUND, 'VERSION_NOT_FOUND: no existe la version ' || v_version_id);
         END;
 
         IF v_status <> 'BORRADOR' THEN
-            fail(E_VERSION_NOT_EDITABLE, 'VERSION_NOT_EDITABLE: la versión ya fue publicada; sube el Word de nuevo');
+            fail(E_VERSION_NOT_EDITABLE, 'VERSION_NOT_EDITABLE: la version ya fue publicada; sube el Word de nuevo');
         END IF;
 
         MERGE INTO QUIZ_MEDIA M
@@ -516,13 +516,13 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY PKG_QUIZ AS
                FOR UPDATE;
         EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                fail(E_VERSION_NOT_FOUND, 'VERSION_NOT_FOUND: no existe la versión ' || p_version_id);
+                fail(E_VERSION_NOT_FOUND, 'VERSION_NOT_FOUND: no existe la version ' || p_version_id);
         END;
 
         IF v_status <> 'PUBLICADA' THEN
             v_errors := NVL(body_number(v_validation, '$.errorCount'), 0);
             IF v_errors > 0 THEN
-                fail(E_VALIDATION_ERRORS, 'VALIDATION_ERRORS: la versión tiene ' || v_errors || ' errores');
+                fail(E_VALIDATION_ERRORS, 'VALIDATION_ERRORS: la version tiene ' || v_errors || ' errores');
             END IF;
 
             SELECT COUNT(*) INTO v_pending FROM QUIZ_MEDIA
@@ -628,7 +628,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY PKG_QUIZ AS
             SELECT ID_CURSO INTO v_curso FROM INSCRIPCIONES WHERE ID_INSCRIPCION = p_id_inscripcion;
         EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                fail(E_INSCRIPCION_NOT_FOUND, 'INSCRIPCION_NOT_FOUND: no existe la inscripción ' || p_id_inscripcion);
+                fail(E_INSCRIPCION_NOT_FOUND, 'INSCRIPCION_NOT_FOUND: no existe la inscripcion ' || p_id_inscripcion);
         END;
 
         APEX_JSON.OPEN_ARRAY;
@@ -708,7 +708,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY PKG_QUIZ AS
              WHERE ID_INSCRIPCION = p_id_inscripcion FOR UPDATE;
         EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                fail(E_INSCRIPCION_NOT_FOUND, 'INSCRIPCION_NOT_FOUND: no existe la inscripción ' || p_id_inscripcion);
+                fail(E_INSCRIPCION_NOT_FOUND, 'INSCRIPCION_NOT_FOUND: no existe la inscripcion ' || p_id_inscripcion);
         END;
 
         BEGIN
@@ -721,7 +721,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY PKG_QUIZ AS
                AND Q.IS_ACTIVE = 'Y';
         EXCEPTION
             WHEN NO_DATA_FOUND THEN
-                fail(E_QUIZ_NOT_PUBLISHED, 'QUIZ_NOT_PUBLISHED: el quiz ' || p_quiz_id || ' no está publicado');
+                fail(E_QUIZ_NOT_PUBLISHED, 'QUIZ_NOT_PUBLISHED: el quiz ' || p_quiz_id || ' no esta publicado');
         END;
 
         IF v_quiz_course <> v_curso THEN
@@ -819,7 +819,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY PKG_QUIZ AS
         END IF;
 
         IF v_status <> 'EN_CURSO' THEN
-            fail(E_ATTEMPT_CLOSED, 'ATTEMPT_CLOSED: el intento ya está ' || v_status);
+            fail(E_ATTEMPT_CLOSED, 'ATTEMPT_CLOSED: el intento ya esta ' || v_status);
         END IF;
 
         INSERT INTO QUIZ_ANSWERS (

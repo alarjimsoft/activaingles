@@ -68,11 +68,11 @@ BEGIN
 
     endpoint('admin/version/:versionId', 'GET',
         'PKG_QUIZ.GET_VERSION(p_version_id => :versionId);',
-        'Versión completa: definición con respuestas, reporte y archivos');
+        'Version completa: definicion con respuestas, reporte y archivos');
 
     endpoint('admin/version', 'POST',
         'PKG_QUIZ.CREATE_VERSION(p_body => :body_text);',
-        'Crea una versión en borrador a partir del Word ya leído por FastAPI');
+        'Crea una version en borrador a partir del Word ya leido por FastAPI');
 
     endpoint('admin/media', 'POST',
         'PKG_QUIZ.SAVE_MEDIA(p_body => :body_text);',
@@ -80,7 +80,7 @@ BEGIN
 
     endpoint('admin/publish/:versionId', 'POST',
         'PKG_QUIZ.PUBLISH_VERSION(p_version_id => :versionId);',
-        'Publica una versión (sin errores y sin archivos pendientes)');
+        'Publica una version (sin errores y sin archivos pendientes)');
 
     endpoint('admin/stats/:quizId', 'GET',
         'PKG_QUIZ.GET_STATS(p_quiz_id => :quizId, p_version_id => :versionId);',
@@ -97,7 +97,7 @@ BEGIN
 
     endpoint('student/attempt/:attemptId', 'GET',
         'PKG_QUIZ.GET_ATTEMPT(p_attempt_id => :attemptId);',
-        'Intento con definición, archivos y respuestas (para calificar y para recargar)');
+        'Intento con definicion, archivos y respuestas (para calificar y para recargar)');
 
     endpoint('student/finish', 'POST',
         'PKG_QUIZ.FINISH_ATTEMPT(p_body => :body_text);',
@@ -120,7 +120,7 @@ BEGIN
         p_patterns       => l_patterns,
         p_modules        => l_modules,
         p_label          => 'Quiz backend',
-        p_description    => 'Acceso exclusivo de FastAPI al módulo quiz',
+        p_description    => 'Acceso exclusivo de FastAPI al modulo quiz',
         p_comments       => NULL);
 
     COMMIT;

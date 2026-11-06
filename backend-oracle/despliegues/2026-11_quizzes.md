@@ -28,7 +28,9 @@ Notas:
 - **Paso 7:** si sale `Package Body PKG_QUIZ compiled with errors`, ejecuta
   `SELECT LINE, POSITION, TEXT FROM USER_ERRORS WHERE NAME = 'PKG_QUIZ' ORDER BY SEQUENCE;`
   y comparte el resultado antes de seguir.
-- **Paso 9:** necesita al menos un estudiante con las misiones del tema 1 completas para probar los intentos; si no hay, lo indica y prueba lo demás.
+- **Paso 8:** la consulta final debe mostrar `LENGTH` = 20 en los tres títulos.
+- **Paso 9:** crea por unos segundos un tema temporal sin misiones para probar los intentos con un estudiante real, y lo borra al final junto con todo lo demás de la prueba. Se puede ejecutar las veces que quieras.
+- **Codificación:** los textos de los scripts no llevan acentos ni símbolos a propósito (el `·` de los títulos se escribe con `UNISTR('\00B7')`). Database Actions puede leer los archivos con otra codificación y convertir `ó` en `Ã³`.
 - **Paso 11:** copia el client_id y el client_secret **directo** a Secret Manager (`ORDS_QUIZ_CLIENT_ID`, `ORDS_QUIZ_CLIENT_SECRET`) y a `backend/.env`. El secreto solo se muestra esta vez y **nunca** debe quedar en un archivo del repositorio.
   Si el script marca error con `ORDS_SECURITY`, crea el cliente desde **Database Actions → REST → Security → OAuth Clients**: nombre `activa_backend`, *grant type* `client_credentials`, rol `quiz_backend_role`.
 - **No ejecutes `ords/progress.sql` completo**: borraría los demás endpoints de `progress` y sus orígenes permitidos. El paso 12 cambia solo `stats`.
