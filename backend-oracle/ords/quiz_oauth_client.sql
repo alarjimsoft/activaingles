@@ -9,13 +9,15 @@
 -- Database Actions → REST → Security → OAuth Clients: nombre activa_backend, grant type
 -- client_credentials, rol quiz_backend_role.
 --
--- Para generar un secreto nuevo más adelante (si se filtra):
---   ORDS_SECURITY.ROTATE_CLIENT_SECRET(p_client_name => 'activa_backend', ...)
+-- En el ORDS de produccion REGISTER_CLIENT (sin p_client_secret) no genera secreto, asi que
+-- el secreto se obtiene con ROTATE_CLIENT_SECRET en el mismo bloque.
+-- Para generar un secreto nuevo mas adelante (si se filtra): ords/quiz_oauth_secret.sql
 
 SET SERVEROUTPUT ON;
 
 DECLARE
     l_client ORDS_TYPES.T_CLIENT_CREDENTIALS;
+    l_secret VARCHAR2(4000);
 BEGIN
     l_client := ORDS_SECURITY.REGISTER_CLIENT(
         p_name          => 'activa_backend',
@@ -28,11 +30,14 @@ BEGIN
         p_client_name => 'activa_backend',
         p_role_name   => 'quiz_backend_role');
 
+    l_secret := ORDS_SECURITY.ROTATE_CLIENT_SECRET(
+        p_name            => 'activa_backend',
+        p_revoke_existing => TRUE,
+        p_revoke_sessions => TRUE);
+
     COMMIT;
 
     DBMS_OUTPUT.PUT_LINE('ORDS_QUIZ_CLIENT_ID=' || l_client.client_key.client_id);
-    -- En algunas versiones de ORDS el registro no devuelve el secreto: si la linea sale vacia,
-    -- ejecuta ords/quiz_oauth_secret.sql para generarlo.
-    DBMS_OUTPUT.PUT_LINE('ORDS_QUIZ_CLIENT_SECRET=' || l_client.client_secret.secret);
+    DBMS_OUTPUT.PUT_LINE('ORDS_QUIZ_CLIENT_SECRET=' || l_secret);
 END;
 /

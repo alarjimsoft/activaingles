@@ -7,23 +7,27 @@
 --
 -- Copia el valor directo a Secret Manager y a backend/.env. NUNCA lo pegues en un archivo
 -- del repositorio ni en un chat.
+--
+-- Firma verificada en el ORDS de produccion (ALL_ARGUMENTS):
+--   ORDS_SECURITY.ROTATE_CLIENT_SECRET(p_name, p_revoke_existing, p_revoke_sessions) RETURN VARCHAR2
 
 SET SERVEROUTPUT ON;
 
 DECLARE
-    l_secret ORDS_TYPES.T_CLIENT_SECRET;
+    l_secret VARCHAR2(4000);
 BEGIN
     l_secret := ORDS_SECURITY.ROTATE_CLIENT_SECRET(
-        p_client_name     => 'activa_backend',
-        p_revoke_existing => TRUE);
+        p_name            => 'activa_backend',
+        p_revoke_existing => TRUE,
+        p_revoke_sessions => TRUE);
     COMMIT;
 
-    DBMS_OUTPUT.PUT_LINE('ORDS_QUIZ_CLIENT_SECRET=' || l_secret.secret);
+    DBMS_OUTPUT.PUT_LINE('ORDS_QUIZ_CLIENT_SECRET=' || l_secret);
 END;
 /
 
 -- Revision: el cliente debe tener el rol quiz_backend_role y el privilegio quiz_backend_priv
-SELECT C.NAME AS CLIENT, C.CLIENT_ID, C.GRANT_TYPE, R.ROLE_NAME
+SELECT C.NAME AS CLIENT, C.CLIENT_ID, C.AUTH_FLOW, R.ROLE_NAME
   FROM USER_ORDS_CLIENTS C
   LEFT JOIN USER_ORDS_CLIENT_ROLES R ON R.CLIENT_NAME = C.NAME
  WHERE C.NAME = 'activa_backend';
