@@ -42,26 +42,30 @@ Lee este archivo antes de tocar cualquier código.
 
 ```
 Browser (React SPA)
-  ├── → FastAPI localhost:8000  (chat, STT, TTS, pronunciación)
+  ├── → FastAPI /api  (chat, STT, TTS, pronunciación, actividades, quizzes, login de académicos)
   │       ├── → OpenAI GPT-4.1-mini
   │       ├── → Google Cloud STT
   │       ├── → Google Cloud TTS
   │       ├── → Azure Pronunciation SDK
-  │       └── → Oracle ORDS (solo add-xp)
-  └── → Oracle ORDS directamente (auth, misiones, conversaciones, progreso)
+  │       ├── → Oracle ORDS módulo "quiz" (OAuth client credentials, solo FastAPI)
+  │       └── → Google Cloud Storage (bucket de los quizzes, URLs firmadas)
+  ├── → Google Cloud Storage directo (el académico sube audios con URL firmada)
+  └── → Oracle ORDS directamente (auth de estudiantes, misiones, conversaciones, progreso)
 ```
 
-**Problema arquitectónico activo:** el frontend llama a Oracle ORDS directamente para 6 de 9 servicios, bypaseando FastAPI. La visión objetivo es que TODO el tráfico pase por FastAPI.
+**Problema arquitectónico activo:** el frontend sigue llamando a Oracle ORDS directamente para misiones, conversaciones y progreso, bypaseando FastAPI. Los quizzes ya van solo por FastAPI (el módulo ORDS `quiz` devuelve respuestas correctas y está protegido con OAuth). La visión objetivo es que TODO el tráfico pase por FastAPI.
 
 ### URLs de servicios
 
 ```
+Producción:   https://alarjimsoft.web.app   (Firebase Hosting; /api/** se reenvía a Cloud Run)
+Backend:      Cloud Run activa-backend (us-east1, proyecto GCP alarjimsoft)
 Oracle ORDS:  https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api/
-FastAPI:      http://127.0.0.1:8000   (solo desarrollo — sin configuración de entorno)
-Frontend:     http://localhost:5173   (Vite dev server)
+Bucket:       gs://alarjimsoft-activa-quiz   (privado; Word, imágenes y audios de los quizzes)
+Desarrollo:   FastAPI http://127.0.0.1:8000/api · Vite http://localhost:5173
 ```
 
-Las URLs están hardcodeadas en cada archivo de servicio. No hay archivo `.env` en el frontend.
+Las URLs del frontend vienen de `.env.development` y `.env.production` (`import.meta.env.VITE_*`, ver §12).
 
 ---
 
@@ -78,14 +82,20 @@ activaIngles/
 │   ├── DATABASE_MAP.md
 │   ├── BUSINESS_RULES.md
 │   ├── GAP_ANALYSIS.md
-│   └── TECHNICAL_DEBT.md
+│   ├── TECHNICAL_DEBT.md
+│   └── quiz/                  ← plantilla y guía de Word aprobadas para los académicos
+├── backend-oracle/            ← DDL y endpoints ORDS exportados (ver §4 y §17)
+│   ├── tables/ constraints/ packages/ PACKAGE_BODIES/ ords/ data/ tests/
+│   └── despliegues/           ← guías de instalación en Oracle (orden y verificación)
+├── public/quiz/               ← copia de la plantilla y la guía, descargables desde la app
 ├── src/                       ← Frontend React
 │   ├── main.jsx               ← punto de entrada
 │   ├── router/AppRouter.jsx   ← definición de rutas
-│   ├── pages/                 ← páginas de la SPA
+│   ├── pages/                 ← páginas de la SPA (QuizPage = quiz del estudiante)
 │   ├── components/
-│   │   ├── dashboard/         ← MissionCard
+│   │   ├── dashboard/         ← MissionCard, QuizCard
 │   │   ├── mission/           ← TutorChat (crítico), MissionSidebar, MessageBubble, CorrectionCard
+│   │   ├── quiz/              ← QuizPanel (académico), QuizPlayer, QuizResults, QuizStats…
 │   │   ├── layout/            ← Sidebar
 │   │   └── ui/                ← StatCard, ProgressCard, Loader
 │   ├── store/
@@ -102,17 +112,26 @@ activaIngles/
 │   │   ├── routes/
 │   │   │   ├── chat.py        ← POST /chat/message
 │   │   │   ├── speech.py      ← POST /speech/to-text, /speech/pronunciation-score
-│   │   │   └── tts.py         ← POST /tts/speak
+│   │   │   ├── tts.py         ← POST /tts/speak
+│   │   │   ├── activities.py  ← práctica generada por IA
+│   │   │   ├── auth.py        ← POST /auth/academico (token de académicos)
+│   │   │   └── quizzes.py     ← todas las rutas de quizzes (§17)
 │   │   └── services/
 │   │       ├── openai_service.py
 │   │       ├── azure_pronunciation.py
 │   │       ├── google_speech.py
 │   │       ├── google_tts.py
-│   │       └── grammar_rules.py
+│   │       ├── grammar_rules.py
+│   │       ├── quiz_parser.py, quiz_validator.py   ← leen y validan el Word
+│   │       ├── quiz_grading.py, quiz_ai.py         ← calificación (abiertas con IA)
+│   │       ├── quiz_storage.py, oracle_quiz.py     ← bucket y módulo ORDS "quiz"
+│   │       └── auth_service.py                     ← JWT de académicos
+│   ├── tests/                 ← pytest (python -m pytest desde backend/)
 │   ├── credentials/
 │   │   └── google-speech.json ← credencial Google Cloud (NO commitear)
 │   ├── .env                   ← API keys reales (NO commitear, en .gitignore)
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── requirements-dev.txt   ← pytest, httpx
 ├── index.html
 ├── package.json
 └── vite.config.js
@@ -135,6 +154,15 @@ Oracle ADB es la **única fuente oficial de verdad**. Nunca diseñar lógica que
 | `USER_PROGRESS`         | **Núcleo pedagógico.** Progreso, XP, tiempo, gramática, pronunciación por misión |
 | `CONVERSATIONS`         | Sesiones de conversación dentro de una misión                                    |
 | `CONVERSATION_MESSAGES` | Mensajes individuales (sender: 'student' / 'tutor')                              |
+| `QUIZZES`               | Un quiz por posición: se presenta después del tema `AFTER_TOPIC_ID` (3, 6 y 9)   |
+| `QUIZ_VERSIONS`         | Cada Word subido; `DEFINITION_JSON` con respuestas (solo lo lee FastAPI)         |
+| `QUIZ_MEDIA`            | Imágenes y audios de cada versión (ruta en el bucket, no el archivo)             |
+| `QUIZ_ATTEMPTS`         | Intentos de los estudiantes (calificación, XP, versión contestada)               |
+| `QUIZ_ANSWERS`          | Respuesta calificada de cada pregunta de un intento                              |
+
+El DDL y los endpoints exportados están en `backend-oracle/`. Las copias pueden estar
+desactualizadas respecto a producción: antes de redefinir un endpoint existente, compara con lo
+que devuelve producción (`curl`) y con los campos que lee el frontend (ver §16).
 
 ### Endpoints ORDS activos
 
@@ -148,9 +176,18 @@ POST /progress/start                          ← inicia progreso de misión
 POST /progress/update                         ← actualiza métricas
 POST /progress/complete                       ← ⚠️ EXISTE PERO NUNCA SE LLAMA
 POST /progress/add-xp                         ← agrega XP (llamado desde FastAPI)
-GET  /progress/stats/:idInscripcion           ← estadísticas del Dashboard
+GET  /progress/stats/:idInscripcion           ← estadísticas del Dashboard (incluye XP de quizzes)
 GET  /progress/mission/:idInscripcion/:id     ← progreso de una misión
+
+/quiz/admin/* y /quiz/student/*               ← módulo de quizzes, PROTEGIDO con OAuth:
+                                                 solo FastAPI (sin token responde 401)
 ```
+
+`/progress/stats` devuelve: `total_missions, completed_missions, total_xp, mission_xp, quiz_xp,
+total_time, avg_progress, avg_pronunciation, avg_grammar, avg_practice_score, current_streak,
+level, xp_next_level`. Dashboard, Progress, Profile y Sidebar usan estos campos: no quites
+ninguno al cambiar el endpoint (se hace con `backend-oracle/ords/progress_stats.sql`, nunca
+volviendo a ejecutar `progress.sql` completo).
 
 ---
 
@@ -183,6 +220,10 @@ Misión completada ............. 40
   Oracle al terminar cada fase y en `CompletionScreen`; se guarda como total, no como suma.
 - `POST /progress/update` usa `GREATEST`: el XP nunca baja si el estudiante repite una fase.
 - Ya no hay XP por mensaje del chat (`/chat/message` no llama a `/progress/add-xp`).
+
+**Quizzes:** cada quiz vale hasta **200 XP**, proporcional al porcentaje obtenido
+(`quiz_grading.py`), y cuenta el **mejor intento**. Se guarda en `QUIZ_ATTEMPTS.XP_EARNED` (no
+en `USER_PROGRESS`) y `/progress/stats` lo suma al XP total y al nivel.
 
 ### Reglas de estado de misiones
 
@@ -232,9 +273,12 @@ El system prompt define el comportamiento completo del tutor. El modelo es `gpt-
 ### `authStore.js` — Estado de sesión
 
 **Ubicación:** `src/store/authStore.js`
-Persiste `{ student, inscripcion, isAuthenticated }` en `localStorage["activa-ingles-auth"]`.
+Persiste `{ student, inscripcion, academico, academicoToken, academicoTokenExpires, userType, rol, isAuthenticated }`
+en `localStorage["activa-ingles-auth"]` (versión 1 del `persist`: las sesiones de académico guardadas
+sin token se cierran una vez).
 `inscripcion.idInscripcion` es el ID pedagógico que se usa en TODAS las llamadas a Oracle.
 `inscripcion.idCurso` es el ID del curso para cargar misiones.
+`academicoToken` es el JWT de FastAPI (12 h) que exigen las rutas de académicos de quizzes.
 
 ---
 
@@ -376,14 +420,16 @@ Mantener este estilo — español, descriptivo, sin prefijos tipo `feat:` / `fix
 
 ## 11. Páginas y su Estado
 
-| Ruta            | Componente    | Estado                       |
-| --------------- | ------------- | ---------------------------- |
-| `/`             | `LoginPage`   | ✅ Completa                  |
-| `/dashboard`    | `Dashboard`   | ✅ Completa                  |
-| `/missions/:id` | `MissionPage` | ✅ Completa                  |
-| `/progress`     | `Progress`    | ❌ Solo `<h1>` — implementar |
-| `/library`      | `Library`     | ❌ Solo `<h1>` — implementar |
-| `/profile`      | `Profile`     | ❌ Solo `<h1>` — implementar |
+| Ruta            | Componente             | Estado                                              |
+| --------------- | ---------------------- | --------------------------------------------------- |
+| `/`             | `LoginPage`            | ✅ Completa                                         |
+| `/dashboard`    | `Dashboard`            | ✅ Completa                                         |
+| `/missions/:id` | `MissionPage`          | ✅ Completa                                         |
+| `/quizzes/:id`  | `QuizPage`             | ✅ Quiz del estudiante (`?intento=N` para recargar) |
+| `/content`      | `MissionContentEditor` | ✅ Académicos; `?quiz=N` abre el panel del quiz     |
+| `/progress`     | `Progress`             | ✅ Completa (incluye sección Quizzes)               |
+| `/library`      | `Library`              | ❌ Solo `<h1>` — implementar                        |
+| `/profile`      | `Profile`              | ✅ Completa                                         |
 
 ---
 
@@ -395,14 +441,26 @@ Mantener este estilo — español, descriptivo, sin prefijos tipo `feat:` / `fix
 OPENAI_API_KEY=sk-proj-...
 AZURE_SPEECH_KEY=...
 AZURE_SPEECH_REGION=eastus
+QUIZ_BUCKET=alarjimsoft-activa-quiz
+ORDS_BASE_URL=https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api
+ORDS_QUIZ_CLIENT_ID=...        ← cliente OAuth "activa_backend" del módulo ORDS quiz
+ORDS_QUIZ_CLIENT_SECRET=...
+QUIZ_JWT_SECRET=...            ← firma el token de académicos
 ```
 
-### Frontend — no existe `.env`, URLs hardcodeadas
+En Cloud Run las mismas variables: `QUIZ_BUCKET` y `ORDS_BASE_URL` como variables de entorno; las
+llaves como secretos de Secret Manager (`OPENAI_API_KEY`, `AZURE_SPEECH_KEY`, `ORDS_QUIZ_CLIENT_ID`,
+`ORDS_QUIZ_CLIENT_SECRET`, `QUIZ_JWT_SECRET`), cada uno con permiso de lectura para
+`activa-backend-sa`. Si el secreto OAuth se filtra: `backend-oracle/ords/quiz_oauth_secret.sql`
+genera uno nuevo.
 
-Cuando se cree, usar `import.meta.env.VITE_*`:
+Local: `gcloud auth application-default login --impersonate-service-account activa-backend-sa@alarjimsoft.iam.gserviceaccount.com`
+para que el backend use el bucket (ver `quiz_storage.py`: no usa `google-speech.json`, que es de otro proyecto).
+
+### Frontend — `.env.development` y `.env.production` (`import.meta.env.VITE_*`)
 
 ```
-VITE_API_URL=http://127.0.0.1:8000
+VITE_API_URL=http://127.0.0.1:8000/api      (producción: /api)
 VITE_ORACLE_URL=https://gb572ef1f8a56c6-caa23.adb.us-ashburn-1.oraclecloudapps.com/ords/api
 ```
 
@@ -419,7 +477,16 @@ cd backend
 python -m uvicorn app.main:app --reload   # FastAPI en localhost:8000
 # o
 uvicorn app.main:app --reload
+python -m pytest                          # pruebas del backend (quizzes)
+
+# Despliegue (siempre desde main, después del merge)
+gcloud run deploy activa-backend --source backend --region us-east1 --project alarjimsoft
+npm run build
+firebase deploy --only hosting
 ```
+
+Si un cambio toca backend y frontend, despliega primero el backend: hay un solo backend para
+producción y la versión anterior del frontend debe seguir funcionando con él.
 
 **Requisito del sistema (no en requirements.txt):** `ffmpeg` instalado para el servicio de pronunciación.
 
@@ -427,7 +494,7 @@ uvicorn app.main:app --reload
 
 ## 14. Restricciones Importantes
 
-1. **No modificar el schema de Oracle** — el DDL está en Oracle ADB, no en el repositorio. Cualquier cambio de tabla debe coordinar con el equipo que administra la base de datos.
+1. **No modificar el schema de Oracle sin coordinar** — el DDL vive en Oracle ADB; `backend-oracle/` guarda los scripts. Los cambios se ejecutan a mano en Database Actions → SQL con **Run Script (F5)**. Database Actions puede leer los archivos con otra codificación (`ó` → `Ã³`): deja los textos de los scripts en ASCII y usa `UNISTR('\00B7')` para símbolos.
 
 2. **No cambiar el modelo de OpenAI** sin evaluar impacto en costos — actualmente `gpt-4.1-mini`. Cambiar a `gpt-4o` multiplica el costo significativamente.
 
@@ -493,11 +560,64 @@ uvicorn app.main:app --reload
 2. ¿El cambio toca `TutorChat.jsx`? → revisar si aplica a `sendMessage` Y a `sendTranscriptMessage` (están duplicadas).
 3. ¿El cambio agrega una nueva llamada a Oracle? → considerar si debe ir directo desde el frontend o pasar por FastAPI.
 4. ¿El cambio modifica el store de Zustand? → recordar que persiste en localStorage — migración puede ser necesaria.
-5. ¿El cambio es en el backend? → FastAPI no tiene autenticación — cualquier nuevo endpoint es público hasta que se implemente.
+5. ¿El cambio es en el backend? → solo las rutas de académicos de quizzes exigen token (`require_academico`); todo lo demás, incluidas las rutas de estudiantes, es público hasta que se implemente autenticación para estudiantes.
 
 **El componente que más cambiará es `TutorChat.jsx`.** Siempre leerlo completo antes de modificarlo — sus dos funciones de envío son casi idénticas y un cambio en una debe replicarse en la otra.
 
 **El archivo más delicado del backend es `openai_service.py`.** El system prompt ahí define el comportamiento pedagógico completo del tutor. Cualquier cambio debe validarse con conversaciones de prueba reales.
+
+**Antes de redefinir un endpoint ORDS que ya existe**, compara con lo que devuelve producción y con
+los campos que lee el frontend (`grep -rhoE "stats\??\.[a-z_]+" src`). La copia de `backend-oracle/`
+puede estar desactualizada: así se perdieron `current_streak` y `avg_practice_score` en noviembre de 2026.
+
+---
+
+## 17. Quizzes (después de los temas 3, 6 y 9)
+
+El académico escribe el quiz en Word con la plantilla de `docs/quiz/`, lo sube en el Content
+Manager junto con los audios y la app lo convierte en el quiz del estudiante. Nadie programa nada
+para crear o cambiar un quiz.
+
+### Flujo
+
+```
+Académico (/content?quiz=N)                       Estudiante (/dashboard → /quizzes/:id)
+1. Descarga plantilla, guía o Word actual          1. Tarjeta después de las misiones del tema
+2. Sube el Word → quiz_validator: reporte            (LOCKED hasta completar las misiones de los
+   · con errores: no crea versión                     temas ≤ al del quiz; no bloquea el avance)
+   · sin errores: Word e imágenes al bucket,       2. start: crea o reanuda el intento; la vista
+     versión BORRADOR en Oracle                       nunca incluye respuestas (student_view)
+3. Sube audios: URL firmada → PUT directo al       3. submit: FastAPI califica (abiertas con IA),
+   bucket → media-complete                            Oracle guarda intento y respuestas
+4. Vista previa (contesta y califica sin guardar)  4. Resultados; las respuestas correctas solo se
+5. Publicar (sin errores ni audios pendientes)        muestran si aprobó o ya no tiene intentos
+6. Resultados: acierto por pregunta (QuizStats)
+```
+
+### Piezas
+
+| Capa      | Archivos                                                                                                                                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plantilla | `docs/quiz/Plantilla_Quiz_ActivaIngles.docx`, `Guia_Crear_Quiz.docx` (copias en `public/quiz/`). Formato de "tarjetas" (tablas): DATOS DEL QUIZ, SECCIÓN, PREGUNTA · tipo. El texto fuera de las tarjetas se ignora |
+| Oracle    | `backend-oracle/tables/QUIZ*.sql`, `PKG_QUIZ`, `ords/quiz.sql`, `data/QUIZZES.sql`; prueba: `tests/quiz_smoke_test.sql`; guía: `despliegues/2026-11_quizzes.md`                                                     |
+| Backend   | `routes/quizzes.py` (rutas documentadas al inicio del archivo), `routes/auth.py`, `services/quiz_*.py`, `oracle_quiz.py`, `auth_service.py`                                                                         |
+| Frontend  | `components/quiz/*`, `components/dashboard/QuizCard.jsx`, `pages/QuizPage.jsx`, `services/quizService.js`, `utils/quizFormat.js`                                                                                    |
+
+### Reglas
+
+- **La posición es un dato**: `QUIZZES.AFTER_TOPIC_ID`. Para agregar un quiz basta con insertar un registro.
+- **Tipos de pregunta**: opción múltiple, verdadero o falso, completar (un solo `___`), relacionar, respuesta abierta. Agregar un tipo requiere cambiar el validador, la calificación, `QuizPlayer` y `QuizResults`, y actualizar la plantilla y la guía.
+- **Versiones**: cada Word crea una versión; publicar archiva la anterior; los intentos guardan la versión que se contestó.
+- **Intentos y tiempo** vienen del Word. Un intento en curso se reanuda; si vence sin entregar queda `EXPIRADO` (2 min de tolerancia). El temporizador usa la hora del servidor.
+- **Respuestas abiertas**: `gpt-4.1-mini` califica solo con los criterios del académico; una respuesta en español vale 0 (lo aplica el código, no solo el prompt).
+- **Archivos**: el nombre en el bucket es el hash del contenido, así una versión nueva reutiliza los audios ya subidos.
+
+### Trampas conocidas
+
+- **CORS del bucket**: solo permite el encabezado `Content-Type`. Si la URL firmada de subida incluye otro (por ejemplo `Cache-Control`), el navegador cancela la subida. Las pruebas en Python no aplican CORS: prueba las subidas en un navegador.
+- **Credenciales locales del bucket**: `main.py` fija `GOOGLE_APPLICATION_CREDENTIALS` a `google-speech.json`; `quiz_storage.py` carga las credenciales de gcloud por su cuenta.
+- **ORDS_SECURITY**: en el ORDS de producción `REGISTER_CLIENT` sin `p_client_secret` no genera secreto y `ROTATE_CLIENT_SECRET` recibe `p_name`. Verifica firmas con `ALL_ARGUMENTS` antes de llamarlas.
+- **Pruebas en producción**: dejan versiones en borrador del quiz y archivos en el bucket. Borra los archivos listándolos primero y por nombre, y las versiones con `DELETE FROM QUIZ_VERSIONS WHERE QUIZ_ID = n AND STATUS = 'BORRADOR'`.
 
 ---
 
