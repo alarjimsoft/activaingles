@@ -1,5 +1,13 @@
 // Utilidades de presentación de los quizzes (vista previa del académico y quiz del estudiante)
 
+export const QUESTION_TYPE_LABELS = {
+  multiple_choice: "Opción múltiple",
+  true_false: "Verdadero o falso",
+  fill_blank: "Completar",
+  matching: "Relacionar",
+  open: "Respuesta abierta",
+};
+
 export function isAnswered(question, value) {
   if (value === undefined || value === null) return false;
   if (question.type === "matching") return question.left.every((left) => value[left]);

@@ -269,7 +269,36 @@ def download_docx(version_id: int, academico: dict = Depends(require_academico))
 
 @router.get("/admin/{quiz_id}/stats")
 def stats(quiz_id: int, versionId: int | None = None, academico: dict = Depends(require_academico)):
-    return oracle.get_stats(quiz_id, versionId)
+    """Resultados de una versión (por defecto la publicada). Oracle agrupa por clave de pregunta;
+    aquí se agrega el texto, la sección y los puntos, en el orden del quiz, incluidas las
+    preguntas que nadie ha contestado."""
+    data = oracle.get_stats(quiz_id, versionId)
+    version_id = data.get("versionId")
+    if not version_id:
+        return {**data, "questions": []}
+
+    version = oracle.get_version(version_id)
+    definition = _definition(version)
+    by_key = {q["questionKey"]: q for q in data.get("questions", [])}
+    data["questions"] = [
+        {
+            "questionKey": question["key"],
+            "number": question["number"],
+            "type": question["type"],
+            "prompt": question["prompt"],
+            "section": section["name"],
+            "points": question["points"],
+            "answers": by_key.get(question["key"], {}).get("answers", 0),
+            "correct": by_key.get(question["key"], {}).get("correct", 0),
+            "partial": by_key.get(question["key"], {}).get("partial", 0),
+            "successRate": by_key.get(question["key"], {}).get("successRate"),
+        }
+        for section in definition.get("sections", [])
+        for question in section.get("questions", [])
+    ]
+    data["versionNumber"] = version.get("versionNumber")
+    data["passingScore"] = version.get("passingScore")
+    return data
 
 
 # ───────────────────────────── Estudiantes ─────────────────────────────
