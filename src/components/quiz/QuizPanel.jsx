@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AnimatePresence } from "framer-motion";
 import {
-  CheckCircle2, ClipboardCheck, Download, Eye, FileText, Loader2, Music, Rocket, XCircle,
+  BarChart3, CheckCircle2, ClipboardCheck, Download, Eye, FileText, Loader2, Music, Rocket, XCircle,
 } from "lucide-react";
 
 import DropZone from "./DropZone";
 import QuizPreview from "./QuizPreview";
+import QuizStats from "./QuizStats";
 import ValidationReport from "./ValidationReport";
 import {
   QUIZ_GUIDE_URL, QUIZ_TEMPLATE_URL, getAdminQuiz, getQuizDocxUrl, getQuizVersion,
@@ -348,6 +349,13 @@ export default function QuizPanel({ quiz, onChanged }) {
               Los estudiantes verán esta versión en sus próximos intentos. Las calificaciones anteriores se conservan.
             </p>
           )}
+        </Card>
+      )}
+
+      {/* Resultados de los estudiantes */}
+      {detail?.versions.some((v) => v.status !== "BORRADOR") && (
+        <Card title="Resultados de los estudiantes" icon={BarChart3}>
+          <QuizStats quizId={quiz.quizId} versions={detail.versions} />
         </Card>
       )}
 

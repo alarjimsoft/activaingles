@@ -99,7 +99,20 @@ class FakeOracle:
         return {"success": True, "quizId": version["quizId"], "versionId": version_id}
 
     def get_stats(self, quiz_id, version_id=None):
-        return {"success": True, "quizId": quiz_id, "attempts": 0, "questions": []}
+        version_id = version_id or self.quizzes[quiz_id]["publishedVersionId"]
+        submitted = [a for a in self.attempts.values() if a["versionId"] == version_id and a["status"] == "ENTREGADO"]
+        # Oracle ordena por clave (texto): S1-P1, S1-P2, S2-P1... y omite las preguntas sin respuestas
+        keys = sorted({ans["questionKey"] for a in submitted for ans in a["answers"] if ans["studentAnswer"]})
+        questions = []
+        for key in keys:
+            rows = [ans for a in submitted for ans in a["answers"] if ans["questionKey"] == key]
+            questions.append({
+                "questionKey": key, "questionType": rows[0]["questionType"], "answers": len(rows),
+                "correct": sum(r["isCorrect"] == "Y" for r in rows), "partial": sum(r["isCorrect"] == "P" for r in rows),
+                "successRate": round(100 * sum(r["pointsEarned"] / r["pointsPossible"] for r in rows) / len(rows), 1),
+            })
+        return {"success": True, "quizId": quiz_id, "versionId": version_id, "attempts": len(submitted),
+                "students": len({a["idInscripcion"] for a in submitted}), "questions": questions}
 
     # Estudiantes
     def available(self, id_inscripcion):
@@ -443,3 +456,40 @@ def test_tiempo_vencido(client, auth, fakes):
                                                      - datetime.timedelta(minutes=5))
     response = client.post(f"/api/quizzes/attempts/{attempt_id}/submit", json={"idInscripcion": 10, "answers": PERFECT})
     assert response.status_code == 409 and fakes[2] == []
+
+
+# ─────────────── Resultados para el académico ───────────────
+
+def test_resultados_por_pregunta_con_texto_y_en_orden(client, auth, fakes):
+    version_id = publish_template(client, auth, fakes)
+    for inscripcion, answers in ((10, PERFECT), (11, {"S1-P1": "b", "S3-P1": "meet"})):
+        attempt_id = client.post("/api/quizzes/1/start", json={"idInscripcion": inscripcion}).json()["attemptId"]
+        client.post(f"/api/quizzes/attempts/{attempt_id}/submit", json={"idInscripcion": inscripcion, "answers": answers})
+
+    body = client.get("/api/quizzes/admin/1/stats", headers=auth).json()
+    assert body["versionId"] == version_id and body["versionNumber"] == 1 and body["passingScore"] == 70
+    assert body["attempts"] == 2 and body["students"] == 2
+    questions = body["questions"]
+    assert [q["number"] for q in questions] == list(range(1, 9))          # las 8, en el orden del quiz
+    first = questions[0]
+    assert first["prompt"] == "What time of day is it in the conversation?" and first["section"] == "Listening"
+    assert first["answers"] == 2 and first["correct"] == 1 and first["successRate"] == 50
+    fill = questions[4]
+    assert fill["questionKey"] == "S3-P1" and fill["successRate"] == 100
+    assert all("answer" not in q and "acceptedAnswers" not in q for q in questions)
+
+
+def test_resultados_sin_intentos(client, auth, fakes):
+    publish_template(client, auth, fakes)
+    body = client.get("/api/quizzes/admin/1/stats", headers=auth).json()
+    assert body["attempts"] == 0 and len(body["questions"]) == 8
+    assert all(q["answers"] == 0 and q["successRate"] is None for q in body["questions"])
+
+
+def test_resultados_de_un_quiz_sin_publicar(client, auth, fakes):
+    body = client.get("/api/quizzes/admin/1/stats", headers=auth).json()
+    assert body["questions"] == []
+
+
+def test_resultados_exigen_token(client):
+    assert client.get("/api/quizzes/admin/1/stats").status_code == 401
